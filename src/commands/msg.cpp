@@ -22,7 +22,7 @@ void sendMsg(int targetFd, string msg)
 void sendAllClientMsg(map<int, Client> &clientList, string msg) {
   std::map<int, Client>::iterator us = clientList.begin();
   while (us != clientList.end()) {
-    send(us->second.getSockfd(), msg.c_str(), msg.length(), 0);
+    send(us->second.getSockfd(), (msg + "\r\n").c_str(), msg.length() + 2, 0);
     us++;
   }
 }

@@ -20,7 +20,7 @@ public:
 
   int addModfd(int sockfd);
   void addClient(Client &client);
-  int removeClient(int sockfd);
+  void removeClient(Client &client);
   void setModfd(int sockfd);
   int searchClient(string nick);
 

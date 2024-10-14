@@ -100,7 +100,7 @@ static void handleClientQuit(int sockfd, fd_set &masterfd, map<int, Client> &cli
   Client &client = clients.find(sockfd)->second;
   cout << FG_RED << "{LOG}[" << sockfd << "] "
        << (client.getNickname().empty() ? "client" : client.getNickname())
-       << " is Disconnected" << endl
+       << " is Disconnected" <<  RESET << endl
        << RESET;
   close(sockfd);
   FD_CLR(sockfd, &masterfd);

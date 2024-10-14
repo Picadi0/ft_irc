@@ -3,6 +3,7 @@
 
 void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
 {
+    cout <<"----------------------" <<client.getNickname() << "------------------------" << endl;
     bool join = false;
     list<Channel>::iterator channel = this->channels.begin();
     while (channel != this->channels.end())
@@ -16,15 +17,18 @@ void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
     }
     if (join)
     {
-        cout << client.getNickname() << " joining channel" << endl;
         if (channel->getPass() == channelPwd)
         {
+            cout << client.getNickname() << " joining channel" << endl;
             channel->addClient(client);
-            sendMsg(client.getSockfd(), RPL_TOPIC(client.getNickname(), channelName, "42"));
-            sendMsg(client.getSockfd(), client.getIDENTITY() + " JOIN " + channelName);
+            sendAllClientMsg(clients, client.getIDENTITY() + " JOIN " + channelName);
+            sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
         }
         else
+        {
+            cout << "475 : Failed to join the " + channelName + " bad password." << endl;
             sendMsg(client.getSockfd(), "475 : Failed to join the " + channelName + " bad password.");
+        }
     }
     else
     {
@@ -34,9 +38,40 @@ void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
         create.setModfd(client.getSockfd());
         create.addClient(client);
         this->channels.push_back(create);
-        sendMsg(client.getSockfd(), RPL_TOPIC(client.getNickname(), channelName, "42"));
-        sendMsg(client.getSockfd(), client.getIDENTITY() + " JOIN " + channelName);
+        sendAllClientMsg(clients, client.getIDENTITY() + " JOIN " + channelName);
+        sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
     }
+}
+
+void IRC::part(Client &client, string channelName)
+{
+    sendAllClientMsg(this->clients, client.getIDENTITY() + " PART " + channelName);
+    list<Channel>::iterator channel = this->channels.begin();
+    while (channel != this->channels.end())
+    {
+        if (channel->getName() == channelName)
+        {
+            channel->removeClient(client);
+            cout << FG_RED << "{LOG}[" << sockfd << "] "
+                 << (client.getNickname().empty() ? "client" : client.getNickname())
+                 << " is disconnected from " << channelName <<  RESET << endl
+                 << RESET;
+            return;
+        }
+        channel++;
+    }
+}
+
+void IRC::quit(Client &client)
+{
+    sendAllClientMsg(this->clients, client.getIDENTITY() + " QUIT: ");
+    cout << FG_RED << "{LOG}[" << sockfd << "] "
+         << (client.getNickname().empty() ? "client" : client.getNickname())
+         << " is disconnected from IRC Server" <<  RESET << endl
+         << RESET;
+    close(client.getSockfd());
+    FD_CLR(client.getSockfd(), &masterfd);
+    this->clients.erase(client.getSockfd());
 }
 
 void IRC::privmsg(string target, string _msg, int sender)
@@ -127,9 +162,27 @@ void IRC::CommandHandler(Client &client, string cmd)
                     string channel, pwd;
                     iss >> channel >> pwd;
                     if (channel[0] == '#')
+                    {
+                        cout << FG_GREEN << "[AAAAA] " << iss.str() << RESET << endl;
                         JoinChannel(client, channel, pwd);
+                    }
                     else
                         sendMsg(client.getSockfd(), "Error: Channel name should be start with #");
+                    break;
+                }
+                else if (token == "PART")
+                {
+                    string channel;
+                    iss >> channel;
+                    if (channel[0] == '#')
+                        part(client, channel);
+                    else
+                        sendMsg(client.getSockfd(), "Error: Channel name should be start with #");
+                    break;
+                }
+                else if (token == "QUIT")//serverden ayrılıyor
+                {
+                    quit(client);
                     break;
                 }
                 else if (token == "TOPIC")
@@ -149,14 +202,6 @@ void IRC::CommandHandler(Client &client, string cmd)
                     break;
                 }
                 else if (token == "MODE")//mod verir
-                {
-                    break;
-                }
-                else if (token == "PART")//kanaldan ayrılıyor
-                {
-                    break;
-                }
-                else if (token == "QUIT")//serverden ayrılıyor
                 {
                     break;
                 }

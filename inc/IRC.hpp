@@ -33,6 +33,8 @@ public:
   void CommandHandler(Client &client, string cmd);
   void JoinChannel(Client &client, string channelName, string channelPwd);
   void privmsg(string targetfd, string msg, int sender);
+  void part(Client &client, string channelName);
+  void quit(Client &client);
   // constructors
   IRC(int port, string password);
   IRC(const IRC &irc);

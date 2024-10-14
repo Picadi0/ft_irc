@@ -29,6 +29,19 @@ void Channel::addClient(Client &client)
     }
     this->clients.push_back(client);
 }
+void Channel::removeClient(Client &client)
+{
+    std::list<Client>::iterator it = this->clients.begin();
+    while (it != this->clients.end())
+    {
+        if (it->getSockfd() == client.getSockfd())
+        {
+            this->clients.erase(it);
+            return;
+        }
+        it++;
+    }
+}
 void Channel::setModfd(int sockfd)
 {
     this->modfd.push_back(sockfd);
