@@ -22,6 +22,7 @@ void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
             cout << client.getNickname() << " joining channel" << endl;
             channel->addClient(client);
             sendAllClientMsg(clients, client.getIDENTITY() + " JOIN " + channelName);
+            sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
             sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
         }
         else
@@ -39,6 +40,7 @@ void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
         create.addClient(client);
         this->channels.push_back(create);
         sendAllClientMsg(clients, client.getIDENTITY() + " JOIN " + channelName);
+        sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
         sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
     }
 }
@@ -64,7 +66,7 @@ void IRC::part(Client &client, string channelName)
 
 void IRC::quit(Client &client)
 {
-    sendAllClientMsg(this->clients, client.getIDENTITY() + " QUIT: ");
+    sendAllClientMsg(this->clients, client.getIDENTITY() + " QUIT Quit: ");
     cout << FG_RED << "{LOG}[" << sockfd << "] "
          << (client.getNickname().empty() ? "client" : client.getNickname())
          << " is disconnected from IRC Server" <<  RESET << endl
@@ -117,36 +119,49 @@ void IRC::CommandHandler(Client &client, string cmd)
                 if (client.getPassword() != this->password)
                     sendMsg(client.getSockfd(), ERR_PASSWMISMATCH);
                 else
-                    sendMsg(client.getSockfd(), ":GRANTED : Password is correct enter your USER/NICK");
+                    sendMsg(client.getSockfd(), ":GRANTED : Password is correct enter your USER&NICK");
             }
             else
                 sendMsg(client.getSockfd(), ERR_UNKNOWNCOMMAND);
         }
         else
         {
-            if (token == "NICK")
+            if (!client.getIsAuthed())
             {
-                iss >> result;
-                if (!result.empty())
-                    client.setNickname(result);
+                if (token == "NICK")
+                {
+                    iss >> result;
+                    if (!result.empty())
+                    {
+                        sendMsg(client.getSockfd(), ": Your NickName is now " + result);
+                        client.setNickname(result);
+                    }
+                    else
+                        sendMsg(client.getSockfd(), ": NICK can't be empty");
+                }
+                else if (token == "USER")
+                {
+                    iss >> result;
+                    if (!result.empty())
+                    {
+                        client.setUsername(result);
+                        sendMsg(client.getSockfd(), ": Your name is now " + result);
+                    }
+                    else
+                        sendMsg(client.getSockfd(), ": USER can't be empty");
+                }
                 else
-                    sendMsg(client.getSockfd(), ": NICK can't be empty");
+                {
+                    sendMsg(client.getSockfd(), token + " Command is not found. Please Enter your USER & NICK");
+                }
+                if (!client.getUsername().empty() && !client.getNickname().empty())
+                {
+                    sendMsg(client.getSockfd(), RPL_WELCOME(client.getUsername()));
+                    client.setIsAuthed(true);
+                    break;
+                }
             }
-            else if (token == "USER")
-            {
-                iss >> result;
-                if (!result.empty())
-                    client.setUsername(result);
-                else
-                    sendMsg(client.getSockfd(), ": USER can't be empty");
-            }
-            if (!client.getUsername().empty() && !client.getNickname().empty() && !client.getIsAuthed())
-            {
-                sendMsg(client.getSockfd(), RPL_WELCOME(client.getUsername()));
-                client.setIsAuthed(true);
-                break;
-            }
-            if (client.getIsAuthed())
+            else
             {
                 if (token == "PRIVMSG")
                 {
