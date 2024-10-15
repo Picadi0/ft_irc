@@ -92,7 +92,7 @@ void IRC::privmsg(string target, string _msg, int sender)
                 while (itClients != itChannel->getClients().end())
                 {
                     if (itClients->getSockfd() != sender)
-                        sendMsg(itClients->getSockfd(), itClients->getIDENTITY() + "PRIVMSG" + " " + target + " :" + msg);
+                        sendMsg(itClients->getSockfd(), this->clients.find(sender)->second.getIDENTITY() + "PRIVMSG" + " " + target + " :" + msg);
                     itClients++;
                 }
             }
