@@ -3,9 +3,9 @@
 
 void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
 {
-    cout <<"----------------------" <<client.getNickname() << "------------------------" << endl;
     bool join = false;
     list<Channel>::iterator channel = this->channels.begin();
+    string joinopmsg = client.getIDENTITY() + " JOIN " + channelName;
     while (channel != this->channels.end())
     {
         if (channel->getName() == channelName)
@@ -21,9 +21,9 @@ void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
         {
             cout << client.getNickname() << " joining channel" << endl;
             channel->addClient(client);
-            sendAllClientMsg(clients, client.getIDENTITY() + " JOIN " + channelName);
+            sendAllClientMsg(clients, joinopmsg);
             sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
-            sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
+            //sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
         }
         else
         {
@@ -39,9 +39,9 @@ void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
         create.setModfd(client.getSockfd());
         create.addClient(client);
         this->channels.push_back(create);
-        sendAllClientMsg(clients, client.getIDENTITY() + " JOIN " + channelName);
+        sendAllClientMsg(clients, joinopmsg);
         sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
-        sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
+        //sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
     }
 }
 
@@ -118,8 +118,8 @@ void IRC::CommandHandler(Client &client, string cmd)
                 client.setPassword(result);
                 if (client.getPassword() != this->password)
                     sendMsg(client.getSockfd(), ERR_PASSWMISMATCH);
-                else
-                    sendMsg(client.getSockfd(), ":GRANTED : Password is correct enter your USER&NICK");
+                //else
+                    //sendMsg(client.getSockfd(), ":GRANTED : Password is correct enter your USER&NICK");
             }
             else
                 sendMsg(client.getSockfd(), ERR_UNKNOWNCOMMAND);
@@ -132,10 +132,7 @@ void IRC::CommandHandler(Client &client, string cmd)
                 {
                     iss >> result;
                     if (!result.empty())
-                    {
-                        sendMsg(client.getSockfd(), ": Your NickName is now " + result);
                         client.setNickname(result);
-                    }
                     else
                         sendMsg(client.getSockfd(), ": NICK can't be empty");
                 }
@@ -143,10 +140,7 @@ void IRC::CommandHandler(Client &client, string cmd)
                 {
                     iss >> result;
                     if (!result.empty())
-                    {
                         client.setUsername(result);
-                        sendMsg(client.getSockfd(), ": Your name is now " + result);
-                    }
                     else
                         sendMsg(client.getSockfd(), ": USER can't be empty");
                 }
@@ -156,7 +150,7 @@ void IRC::CommandHandler(Client &client, string cmd)
                 }
                 if (!client.getUsername().empty() && !client.getNickname().empty())
                 {
-                    sendMsg(client.getSockfd(), RPL_WELCOME(client.getUsername()));
+                    sendMsg(client.getSockfd(), RPL_WELCOME(client.getNickname(),client.getUsername(),client.getHostInfo()));
                     client.setIsAuthed(true);
                     break;
                 }
@@ -177,10 +171,7 @@ void IRC::CommandHandler(Client &client, string cmd)
                     string channel, pwd;
                     iss >> channel >> pwd;
                     if (channel[0] == '#')
-                    {
-                        cout << FG_GREEN << "[AAAAA] " << iss.str() << RESET << endl;
                         JoinChannel(client, channel, pwd);
-                    }
                     else
                         sendMsg(client.getSockfd(), "Error: Channel name should be start with #");
                     break;
@@ -198,6 +189,11 @@ void IRC::CommandHandler(Client &client, string cmd)
                 else if (token == "QUIT")//serverden ayrılıyor
                 {
                     quit(client);
+                    break;
+                }
+                else if (token == "PING")
+                {
+                    sendMsg(client.getSockfd(), "PONG " + iss.str());
                     break;
                 }
                 else if (token == "TOPIC")
@@ -222,16 +218,6 @@ void IRC::CommandHandler(Client &client, string cmd)
                 }
                 else if (token == "NOTICE")
                 {
-                    break;
-                }
-                else if (token == "PING")
-                {
-                    sendMsg(client.getSockfd(), cmd);
-                    break;
-                }
-                else if (token == "PONG")
-                {
-                    sendMsg(client.getSockfd(), token);
                     break;
                 }
                 else

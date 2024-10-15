@@ -1,5 +1,5 @@
 #pragma once
-#define  RPL_WELCOME(username) ("001 :"+username)
+#define  RPL_WELCOME(nickname, username,hostinfo) (": 001 " + nickname + " :Welcome to the IRC Network " + nickname + "!" + username + "@" +hostinfo)
 #define  ERR_PASSWMISMATCH ":server 464* : Incorrect Password"
 #define  ERR_UNKNOWNCOMMAND ":server 421 * : Please enter the PASS command"
 #define RPL_YOURHOST "002 : <client> :Your host is <servername>, running version <version>"
