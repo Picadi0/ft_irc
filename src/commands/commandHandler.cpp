@@ -78,7 +78,6 @@ void IRC::quit(Client &client)
 
 void IRC::privmsg(string target, string _msg, int sender)
 {
-    cout << "target = " << target << " _msg = " << _msg << endl;
     string msg = _msg.substr(1);
     if (target[0] == '#')
     {
@@ -150,7 +149,7 @@ void IRC::CommandHandler(Client &client, string cmd)
                 }
                 if (!client.getUsername().empty() && !client.getNickname().empty())
                 {
-                    sendMsg(client.getSockfd(), RPL_WELCOME(client.getNickname(),client.getUsername(),client.getHostInfo()));
+                    sendMsg(client.getSockfd(), RPL_WELCOME(client.getNickname(),client.getUsername(),client.getHostInfo())));
                     client.setIsAuthed(true);
                     break;
                 }
@@ -184,11 +183,13 @@ void IRC::CommandHandler(Client &client, string cmd)
                         part(client, channel);
                     else
                         sendMsg(client.getSockfd(), "Error: Channel name should be start with #");
+                    checkChannelEmpty();
                     break;
                 }
                 else if (token == "QUIT")//serverden ayrılıyor
                 {
                     quit(client);
+                    checkChannelEmpty();
                     break;
                 }
                 else if (token == "PING")

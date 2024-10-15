@@ -2,6 +2,7 @@
 #include "../inc/client.hpp"
 #include <arpa/inet.h>
 #include <cstdio>
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <sys/select.h>
@@ -100,11 +101,27 @@ static void handleClientQuit(int sockfd, fd_set &masterfd, map<int, Client> &cli
   Client &client = clients.find(sockfd)->second;
   cout << FG_RED << "{LOG}[" << sockfd << "] "
        << (client.getNickname().empty() ? "client" : client.getNickname())
-       << " is Disconnected" <<  RESET << endl
+       << " is Disconnected313131" <<  RESET << endl
        << RESET;
   close(sockfd);
   FD_CLR(sockfd, &masterfd);
   clients.erase(sockfd);
+}
+
+void IRC::checkChannelEmpty()
+{
+    cout << "Checking is there any empty channel " << endl;
+    list<Channel>::iterator it = this->channels.begin();
+    while (it != this->channels.end())
+    {
+        cout << it->getName() << " user count is " << it->getClients().size() << endl;
+        if (it->getClients().size() == 0)
+        {
+            cout << "Destroying the channel " << it->getName() << endl;
+            this->channels.erase(it);
+        }
+        it++;
+    }
 }
 
 void IRC::handleClient(int sockfd)
@@ -117,6 +134,7 @@ void IRC::handleClient(int sockfd)
     if (nbytes != 0)
       cout << FG_RED + client.getUsername() + " its Quit" + RESET;
     handleClientQuit(sockfd, this->masterfd, this->clients);
+    //checkChannelEmpty();
   }
   else
   {

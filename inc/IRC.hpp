@@ -35,6 +35,7 @@ public:
   void privmsg(string targetfd, string msg, int sender);
   void part(Client &client, string channelName);
   void quit(Client &client);
+  void checkChannelEmpty();
   // constructors
   IRC(int port, string password);
   IRC(const IRC &irc);
