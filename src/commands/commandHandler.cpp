@@ -74,6 +74,7 @@ void IRC::quit(Client &client)
     close(client.getSockfd());
     FD_CLR(client.getSockfd(), &masterfd);
     this->clients.erase(client.getSockfd());
+    checkChannelEmpty();
 }
 
 void IRC::privmsg(string target, string _msg, int sender)
@@ -130,18 +131,18 @@ void IRC::CommandHandler(Client &client, string cmd)
                 if (token == "NICK")
                 {
                     iss >> result;
-                    if (!result.empty())
+                    if (!result.empty() && searchClientByNick(result) == -1)
                         client.setNickname(result);
                     else
-                        sendMsg(client.getSockfd(), ": NICK can't be empty");
+                        sendMsg(client.getSockfd(), ": NICK is empty / already taken");
                 }
                 else if (token == "USER")
                 {
                     iss >> result;
-                    if (!result.empty())
+                    if (!result.empty() && searchClientByUser(result) == -1)
                         client.setUsername(result);
                     else
-                        sendMsg(client.getSockfd(), ": USER can't be empty");
+                        sendMsg(client.getSockfd(), ": USER is empty / already taken");
                 }
                 else
                 {

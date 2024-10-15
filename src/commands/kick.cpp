@@ -1,10 +1,20 @@
 #include "../../inc/IRC.hpp"
 #include "../../inc/libs.hpp"
 
-int Channel::searchClient(string nick) {
+int Channel::searchClientFdByNick(string nick) {
     std::list<Client>::iterator it = clients.begin();
     while (it != clients.end()) {
         if (it->getNickname() == nick) {
+            return it->getSockfd(); // Kullanıcının soket numarasını döndür
+        }
+        ++it;
+    }
+    return -1; // Kullanıcı bulunamadı
+}
+int Channel::searchClientFdByUser(string user) {
+    std::list<Client>::iterator it = clients.begin();
+    while (it != clients.end()) {
+        if (it->getUsername() == user) {
             return it->getSockfd(); // Kullanıcının soket numarasını döndür
         }
         ++it;
@@ -43,7 +53,7 @@ void IRC::KickUser(Client &client, const std::string &channelName, const std::st
     }
 
     // Hedef kullanıcı kanalda mı?
-    int targetSockfd = it->searchClient(targetNick);
+    int targetSockfd = it->searchClientFdByNick(targetNick);
     if (targetSockfd == -1)
     {
         sendMsg(client.getSockfd(), "441 " + targetNick + " " + channelName + " :They aren't on that channel");
