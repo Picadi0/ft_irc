@@ -40,6 +40,8 @@ public:
   int searchClientByNick(string nick);
   int searchClientByUser(string user);
   void sendUsersInChannel(Channel &channel);
+  void who(string channelName, bool isChannel, Client &sender);
+
   // constructors
   IRC(int port, string password);
   IRC(const IRC &irc);

@@ -1,6 +1,7 @@
 #include "../../inc/IRC.hpp"
 #include <algorithm>
 #include <string>
+#include <sys/socket.h>
 
 void IRC::sendUsersInChannel(Channel &channel)
 {
@@ -13,6 +14,56 @@ void IRC::sendUsersInChannel(Channel &channel)
         if (modfd != channel.getModFd().end())
             sendAllClientMsg(clients, "MODE " + channel.getName() + " +o " + client->getNickname());
         client++;
+    }
+}
+
+void IRC::who(string channelOrName, bool isChannel, Client &sender)
+{
+    bool found = false;
+    if (isChannel)
+    {
+        list<Channel>::iterator channel = this->channels.begin();
+        while (channel != this->channels.end())
+        {
+            if (channel->getName() == channelOrName)
+            {
+                found = true;
+                break;
+            }
+            channel++;
+        }
+        if (found)
+        {
+            list<Client>::iterator client = channel->getClients().begin();
+            while(client != channel->getClients().end())
+            {
+                sendMsg(sender.getSockfd(), ":server 352 " + sender.getNickname() + " " + channel->getName() + " " + client->getUsername() + " " + client->getHostInfo() + " " + "42Istanbul" + " " + client->getNickname() + " H :0 " + client->getRealname());
+                client++;
+            }
+            sendMsg(sender.getSockfd(), ":server 315 " + sender.getNickname() + " " + channel->getName() + " :End of /WHO list");
+        }
+    }
+    else
+    {
+        list<Channel>::iterator channel = this->channels.begin();
+        list<Client>::iterator client;
+        while (channel != this->channels.end())
+        {
+            found = false;
+            client = channel->getClients().begin();
+            if (client != channel->getClients().end())
+            {
+                if (client->getNickname() == channelOrName)
+                {
+                    sendMsg(sender.getSockfd(), ":server 352 " + sender.getNickname() + " " + channel->getName() + " " + client->getUsername() + " " + client->getHostInfo() + " " + "42Istanbul" + " " + client->getNickname() + " H :0 " + client->getRealname());
+                    found = true;
+                }
+                client++;
+            }
+            if (found)
+                sendMsg(sender.getSockfd(), ":server 315 " + sender.getNickname() + " " + channel->getName() + " :End of /WHO list");
+            channel++;
+        }
     }
 }
 
@@ -38,7 +89,7 @@ void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
             channel->addClient(client);
             sendAllClientMsg(clients, joinopmsg);
             sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
-            sendUsersInChannel(*channel);
+            //sendUsersInChannel(*channel);
             //sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
         }
         else
@@ -219,6 +270,10 @@ void IRC::CommandHandler(Client &client, string cmd)
                 {
                     string channel;
                     iss >> channel;
+                    if (channel[0] == '#')
+                        who(channel, true, client);
+                    else
+                        who(channel, false, client);
                     break;
                 }
                 else if (token == "TOPIC")
