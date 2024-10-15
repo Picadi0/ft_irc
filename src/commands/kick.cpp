@@ -55,11 +55,8 @@ void IRC::KickUser(Client &client, const std::string &channelName, const std::st
 
     // Kanaldaki tüm kullanıcılara KICK mesajı gönder
     std::string kickMessage = ":" + client.getNickname() + " KICK " + channelName + " " + targetNick;
-    std::list<Client>& clientsList = it->getClients();
-for (std::list<Client>::iterator clientIt = clientsList.begin(); clientIt != clientsList.end(); ++clientIt)
-    {
-        sendMsg(clientIt->getSockfd(), kickMessage);
-    }
+
+        sendAllClientMsg(clients, kickMessage);
 
     // Hedef kullanıcıya özel mesaj gönder
     sendMsg(targetSockfd, kickMessage);
