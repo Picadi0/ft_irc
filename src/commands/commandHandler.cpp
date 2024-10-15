@@ -197,6 +197,10 @@ void IRC::CommandHandler(Client &client, string cmd)
                     sendMsg(client.getSockfd(), "PONG " + iss.str());
                     break;
                 }
+                else if (token == "W")
+                {
+                    break;
+                }
                 else if (token == "TOPIC")
                 {
                     break;
