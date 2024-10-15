@@ -89,7 +89,7 @@ void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
             channel->addClient(client);
             sendAllClientMsg(clients, joinopmsg);
             sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
-            //sendUsersInChannel(*channel);
+            sendUsersInChannel(*channel);
             //sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
         }
         else
