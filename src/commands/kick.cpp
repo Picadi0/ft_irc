@@ -52,7 +52,7 @@ void IRC::KickUser(Client &client, const std::string &channelName, const std::st
     int targetSockfd = it->searchClientFdByNick(targetNick);
     if (targetSockfd == -1)
     {
-       xw sendMsg(client.getSockfd(), "441 " + targetNick + " " + channelName + " :They aren't on that channel");
+        sendMsg(client.getSockfd(), "441 " + targetNick + " " + channelName + " :They aren't on that channel");
         return;
     }
     // Kullanıcıyı kanaldan çıkar
