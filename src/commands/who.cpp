@@ -8,7 +8,7 @@ void IRC::who(list<Channel> channels, string channelName)
         {
             cout << "Channel: " << it->getName() << endl;
             cout << "Users: " << endl;
-            sendAllClientMsg(this->clients, "352 : "+ it->getName() + " : " + it->getUsers()x);
+            sendAllClientMsg(this->clients, "352 : "+ it->getName() + " : " );
             return;
         }
     }
