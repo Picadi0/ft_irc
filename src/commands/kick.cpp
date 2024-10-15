@@ -1,18 +1,6 @@
 #include "../../inc/IRC.hpp"
 #include "../../inc/libs.hpp"
 
-int Channel::removeClient2(int sockfd) {
-    std::list<Client>::iterator it = clients.begin();
-    while (it != clients.end()) {
-        if (it->getSockfd() == sockfd) {
-            clients.erase(it);
-            return 0; // Başarılı bir şekilde çıkarıldı
-        }
-        ++it;
-    }
-    return -1; // Kullanıcı bulunamadı
-}
-
 int Channel::searchClient(string nick) {
     std::list<Client>::iterator it = clients.begin();
     while (it != clients.end()) {
@@ -63,7 +51,7 @@ void IRC::KickUser(Client &client, const std::string &channelName, const std::st
     }
 
     // Kullanıcıyı kanaldan çıkar
-    it->removeClient2(targetSockfd);
+    it->removeClient(client);
 
     // Kanaldaki tüm kullanıcılara KICK mesajı gönder
     std::string kickMessage = ":" + client.getNickname() + " KICK " + channelName + " " + targetNick;
