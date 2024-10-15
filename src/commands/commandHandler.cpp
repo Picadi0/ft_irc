@@ -197,6 +197,17 @@ void IRC::CommandHandler(Client &client, string cmd)
                     sendMsg(client.getSockfd(), "PONG " + iss.str());
                     break;
                 }
+                else if (token == "WHO")
+                {
+                    string channelName;
+                    iss >> channelName;
+                    if (channelName[0] == '#')
+                        who(this->channels, channelName);
+                    else
+                        sendMsg(client.getSockfd(), "Error: Channel name should be start with #");
+                    checkChannelEmpty();
+                    break;
+                }
                 else if (token == "TOPIC")
                 {
                     break;

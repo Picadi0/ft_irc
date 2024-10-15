@@ -36,6 +36,8 @@ public:
   void part(Client &client, string channelName);
   void quit(Client &client);
   void checkChannelEmpty();
+  void who(list<Channel> channels, string channelName);
+
   // constructors
   IRC(int port, string password);
   IRC(const IRC &irc);
