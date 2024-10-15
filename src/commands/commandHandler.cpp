@@ -203,6 +203,14 @@ void IRC::CommandHandler(Client &client, string cmd)
                 }
                 else if (token == "KICK")
                 {
+                    string channel, targetUser;
+                    iss >> channel >> targetUser;
+                    if (channel[0] == '#')
+                    {
+                        KickUser(client, channel, targetUser);
+                    }
+                    else
+                        sendMsg(client.getSockfd(), "Error: Channel name should start with #");
                     break;
                 }
                 else if (token == "LIST")
