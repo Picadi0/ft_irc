@@ -1,5 +1,20 @@
 #include "../../inc/IRC.hpp"
+#include <algorithm>
 #include <string>
+
+void IRC::sendUsersInChannel(Channel &channel)
+{
+    list<Client>::iterator client = channel.getClients().begin();
+    list<int>::iterator modfd;
+    while(client != channel.getClients().end())
+    {
+        modfd = find(channel.getModFd().begin(), channel.getModFd().end(), client->getSockfd());
+        sendAllClientMsg(clients, client->getIDENTITY() + " JOIN " + channel.getName());
+        if (modfd != channel.getModFd().end())
+            sendAllClientMsg(clients, "MODE " + channel.getName() + " +o " + client->getNickname());
+        client++;
+    }
+}
 
 void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
 {
@@ -22,8 +37,9 @@ void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
             cout << client.getNickname() << " joining channel" << endl;
             channel->addClient(client);
             sendAllClientMsg(clients, joinopmsg);
-            sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
-            //sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
+            sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
+            sendUsersInChannel(*channel);
+            //sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
         }
         else
         {
@@ -40,8 +56,9 @@ void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
         create.addClient(client);
         this->channels.push_back(create);
         sendAllClientMsg(clients, joinopmsg);
-        sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
-        //sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
+        sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
+        //sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
+        sendAllClientMsg(clients, "MODE " + channelName + " +o " + client.getNickname());
     }
 }
 
@@ -74,6 +91,7 @@ void IRC::quit(Client &client)
     close(client.getSockfd());
     FD_CLR(client.getSockfd(), &masterfd);
     this->clients.erase(client.getSockfd());
+    checkChannelEmpty();
 }
 
 void IRC::privmsg(string target, string _msg, int sender)
@@ -92,7 +110,7 @@ void IRC::privmsg(string target, string _msg, int sender)
                 while (itClients != itChannel->getClients().end())
                 {
                     if (itClients->getSockfd() != sender)
-                        sendMsg(itClients->getSockfd(), itClients->getIDENTITY() + "PRIVMSG" + " " + target + " :" + msg);
+                        sendMsg(itClients->getSockfd(), this->clients.find(sender)->second.getIDENTITY() + "PRIVMSG" + " " + target + " :" + msg);
                     itClients++;
                 }
             }
@@ -130,18 +148,18 @@ void IRC::CommandHandler(Client &client, string cmd)
                 if (token == "NICK")
                 {
                     iss >> result;
-                    if (!result.empty())
+                    if (!result.empty() && searchClientByNick(result) == -1)
                         client.setNickname(result);
                     else
-                        sendMsg(client.getSockfd(), ": NICK can't be empty");
+                        sendMsg(client.getSockfd(), ": NICK is empty / already taken");
                 }
                 else if (token == "USER")
                 {
                     iss >> result;
-                    if (!result.empty())
+                    if (!result.empty() && searchClientByUser(result) == -1)
                         client.setUsername(result);
                     else
-                        sendMsg(client.getSockfd(), ": USER can't be empty");
+                        sendMsg(client.getSockfd(), ": USER is empty / already taken");
                 }
                 else
                 {
@@ -199,16 +217,8 @@ void IRC::CommandHandler(Client &client, string cmd)
                 }
                 else if (token == "WHO")
                 {
-                    string channelName;
-                    iss >> channelName;
-                    if (channelName[0] == '#')
-                        who(this->channels, channelName);
-                    else
-                        sendMsg(client.getSockfd(), "Error: Channel name should be start with #");
-                    checkChannelEmpty();
-                }
-                else if (token == "W")
-                {
+                    string channel;
+                    iss >> channel;
                     break;
                 }
                 else if (token == "TOPIC")

@@ -1,6 +1,7 @@
 #include "../inc/IRC.hpp"
 #include "../inc/client.hpp"
 #include <arpa/inet.h>
+#include <cstddef>
 #include <cstdio>
 #include <ostream>
 #include <sstream>
@@ -101,7 +102,7 @@ static void handleClientQuit(int sockfd, fd_set &masterfd, map<int, Client> &cli
   Client &client = clients.find(sockfd)->second;
   cout << FG_RED << "{LOG}[" << sockfd << "] "
        << (client.getNickname().empty() ? "client" : client.getNickname())
-       << " is Disconnected313131" <<  RESET << endl
+       << " is Disconnected" <<  RESET << endl
        << RESET;
   close(sockfd);
   FD_CLR(sockfd, &masterfd);
@@ -145,4 +146,30 @@ void IRC::handleClient(int sockfd)
          << " : " << FG_WHITE << buff << endl
          << RESET;
   }
+}
+
+int IRC::searchClientByNick(string nick)
+{
+    map<int, Client>::iterator it = this->clients.begin();
+    while (it != clients.end()) {
+        if (it->second.getNickname() == nick)
+        {
+            return it->second.getSockfd();
+        }
+        ++it;
+    }
+    return -1;
+}
+
+int IRC::searchClientByUser(string user)
+{
+    map<int, Client>::iterator it = this->clients.begin();
+    while (it != clients.end()) {
+        if (it->second.getUsername() == user)
+        {
+            return it->second.getSockfd();
+        }
+        ++it;
+    }
+    return -1;
 }

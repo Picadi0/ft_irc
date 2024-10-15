@@ -22,12 +22,14 @@ public:
   void addClient(Client &client);
   void removeClient(Client &client);
   void setModfd(int sockfd);
-  int searchClient(string nick);
+  int searchClientFdByNick(string nick);
+  int searchClientFdByUser(string user);
 
   // Get-Set
   string getName() { return this->name; }
   string getPass() { return this->pass; }
   string getTopic() { return this->topic; }
+  string getClientsNames();
   list<Client> &getClients() { return this->clients; }
   list<int> getModFd() { return this->modfd; }
 
