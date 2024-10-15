@@ -32,6 +32,7 @@ public:
   void handleClient(int sockfd);
   void CommandHandler(Client &client, string cmd);
   void JoinChannel(Client &client, string channelName, string channelPwd);
+  void KickUser(Client &client, const std::string &channelName, const std::string &targetUser);
   void privmsg(string targetfd, string msg, int sender);
   void part(Client &client, string channelName);
   void quit(Client &client);
