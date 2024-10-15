@@ -1,5 +1,20 @@
 #include "../../inc/IRC.hpp"
+#include <algorithm>
 #include <string>
+
+void IRC::sendUsersInChannel(Channel &channel)
+{
+    list<Client>::iterator client = channel.getClients().begin();
+    list<int>::iterator modfd;
+    while(client != channel.getClients().end())
+    {
+        modfd = find(channel.getModFd().begin(), channel.getModFd().end(), client->getSockfd());
+        sendAllClientMsg(clients, client->getIDENTITY() + " JOIN " + channel.getName());
+        if (modfd != channel.getModFd().end())
+            sendAllClientMsg(clients, "MODE " + channel.getName() + " +o " + client->getNickname());
+        client++;
+    }
+}
 
 void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
 {
@@ -22,8 +37,9 @@ void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
             cout << client.getNickname() << " joining channel" << endl;
             channel->addClient(client);
             sendAllClientMsg(clients, joinopmsg);
-            sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
-            //sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
+            sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
+            sendUsersInChannel(*channel);
+            //sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
         }
         else
         {
@@ -40,7 +56,8 @@ void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
         create.addClient(client);
         this->channels.push_back(create);
         sendAllClientMsg(clients, joinopmsg);
-        sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
+        sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
+        //sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
         sendAllClientMsg(clients, "MODE " + channelName + " +o " + client.getNickname());
     }
 }

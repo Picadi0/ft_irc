@@ -39,6 +39,7 @@ public:
   void checkChannelEmpty();
   int searchClientByNick(string nick);
   int searchClientByUser(string user);
+  void sendUsersInChannel(Channel &channel);
   // constructors
   IRC(int port, string password);
   IRC(const IRC &irc);
