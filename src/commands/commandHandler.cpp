@@ -41,7 +41,7 @@ void IRC::JoinChannel(Client &client, string channelName, string channelPwd)
         this->channels.push_back(create);
         sendAllClientMsg(clients, joinopmsg);
         sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
-        //sendAllClientMsg(clients, RPL_TOPIC(client.getNickname(), channelName, "42"));
+        sendAllClientMsg(clients, "MODE " + channelName + " +o " + client.getNickname());
     }
 }
 
@@ -198,8 +198,10 @@ void IRC::CommandHandler(Client &client, string cmd)
                     sendMsg(client.getSockfd(), "PONG " + iss.str());
                     break;
                 }
-                else if (token == "W")
+                else if (token == "WHO")
                 {
+                    string channel;
+                    iss >> channel;
                     break;
                 }
                 else if (token == "TOPIC")

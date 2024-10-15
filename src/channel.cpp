@@ -1,5 +1,6 @@
 #include "../inc/channel.hpp"
 #include "../inc/IRC.hpp"
+#include <string>
 Channel::Channel() {
   cout << FG_YELLOW << "   Channel Info\n"
        << "――――――――――――――――――――――׀\n"
@@ -14,6 +15,17 @@ Channel::Channel(string name, string pass)
 }
 
 Channel::~Channel() {}
+string Channel::getClientsNames()
+{
+    string ret;
+    list<Client>::iterator it = this->clients.begin();
+    while(it != this->clients.end())
+    {
+        if (!it->getNickname().empty())
+            ret += it->getNickname() + " ";
+    }
+    return ret;
+}
 
 void Channel::addClient(Client &client)
 {
