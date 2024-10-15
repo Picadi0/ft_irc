@@ -206,6 +206,9 @@ void IRC::CommandHandler(Client &client, string cmd)
                     else
                         sendMsg(client.getSockfd(), "Error: Channel name should be start with #");
                     checkChannelEmpty();
+                }
+                else if (token == "W")
+                {
                     break;
                 }
                 else if (token == "TOPIC")

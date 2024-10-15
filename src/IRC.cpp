@@ -110,15 +110,15 @@ static void handleClientQuit(int sockfd, fd_set &masterfd, map<int, Client> &cli
 
 void IRC::checkChannelEmpty()
 {
-    cout << "Checking is there any empty channel " << endl;
     list<Channel>::iterator it = this->channels.begin();
     while (it != this->channels.end())
     {
-        cout << it->getName() << " user count is " << it->getClients().size() << endl;
         if (it->getClients().size() == 0)
         {
-            cout << "Destroying the channel " << it->getName() << endl;
+            cout << FG_RED << "{LOG}"
+            "Destroyed the channel " << it->getName() << RESET << endl;
             this->channels.erase(it);
+            break;
         }
         it++;
     }
@@ -134,7 +134,7 @@ void IRC::handleClient(int sockfd)
     if (nbytes != 0)
       cout << FG_RED + client.getUsername() + " its Quit" + RESET;
     handleClientQuit(sockfd, this->masterfd, this->clients);
-    //checkChannelEmpty();
+    checkChannelEmpty();
   }
   else
   {
