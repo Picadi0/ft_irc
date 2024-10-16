@@ -2,6 +2,7 @@
 
 #include "channel.hpp"
 #include "client.hpp"
+#include <string>
 
 #define BACKLOG 10       // how many pending connections queue will hold
 #define MAXCLIENTS 10    // maximum number of clients
@@ -33,7 +34,7 @@ public:
   void CommandHandler(Client &client, string cmd);
   void JoinChannel(Client &client, string channelName, string channelPwd);
   void KickUser(Client &client, const std::string &channelName, const std::string &targetUser);
-  void privmsg(string targetfd, string msg, int sender);
+  void privmsg(Client &client, string target, string msg);
   void part(Client &client, string channelName);
   void quit(Client &client);
   void checkChannelEmpty();
@@ -48,6 +49,8 @@ public:
   void listChannelsss(Client client, string channelNames);
   void topic(Client &client, string channelName, string topic);
   Channel *searchChannel(string channelName);
+  Client *searchClient(string nick);
+  void notice(Client &sender, string target, string msg);
   // constructors
   IRC(int port, string password);
   IRC(const IRC &irc);

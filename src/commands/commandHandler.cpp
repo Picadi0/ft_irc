@@ -179,31 +179,6 @@ void IRC::quit(Client &client)
     transferOnOpLeave(saveSockfd);
 }
 
-void IRC::privmsg(string target, string _msg, int sender)
-{
-    string msg = _msg.substr(1);
-    if (target[0] == '#')
-    {
-        string channelName = target;
-        list<Channel>::iterator itChannel = this->channels.begin();
-        list<Client>::iterator itClients;
-        while (itChannel != this->channels.end())
-        {
-            if (channelName == itChannel->getName())
-            {
-                itClients = itChannel->getClients().begin();
-                while (itClients != itChannel->getClients().end())
-                {
-                    if (itClients->getSockfd() != sender)
-                        sendMsg(itClients->getSockfd(), this->clients.find(sender)->second.getIDENTITY() + "PRIVMSG" + " " + target + " :" + msg);
-                    itClients++;
-                }
-            }
-            itChannel++;
-        }
-    }
-}
-
 void IRC::CommandHandler(Client &client, string cmd)
 {
     std::istringstream iss(cmd);
@@ -247,9 +222,7 @@ void IRC::CommandHandler(Client &client, string cmd)
                         sendMsg(client.getSockfd(), ": USER is empty / already taken");
                 }
                 else
-                {
                     sendMsg(client.getSockfd(), token + " Command is not found. Please Enter your USER & NICK");
-                }
                 if (!client.getUsername().empty() && !client.getNickname().empty())
                 {
                     sendMsg(client.getSockfd(), RPL_WELCOME(client.getNickname(),client.getUsername(),client.getHostInfo())));
@@ -263,7 +236,7 @@ void IRC::CommandHandler(Client &client, string cmd)
                 {
                     string target;
                     iss >> target;
-                    privmsg(target, iss.str().substr(iss.tellg()), client.getSockfd());
+                    privmsg(client,target, iss.str().substr(iss.tellg()));
                     break;
                 }
                 else if (token == "JOIN" || token == "join")
@@ -348,6 +321,9 @@ void IRC::CommandHandler(Client &client, string cmd)
                 }
                 else if (token == "NOTICE")
                 {
+                    string target;
+                    iss >> target;
+                    notice(client, target, iss.str().substr(iss.tellg()));
                     break;
                 }
                 else
