@@ -178,9 +178,7 @@ void IRC::CommandHandler(Client &client, string cmd)
                 {
                     string target;
                     iss >> target;
-                    std::streampos pos = iss.tellg();
-                    std::string processed_part = iss.str().substr(pos);
-                    privmsg(target, processed_part, client.getSockfd());
+                    privmsg(target, iss.str().substr(iss.tellg()), client.getSockfd());
                     break;
                 }
                 else if (token == "JOIN")
@@ -223,6 +221,11 @@ void IRC::CommandHandler(Client &client, string cmd)
                 }
                 else if (token == "TOPIC")
                 {
+                    string channel, title;
+                    iss >> channel;
+                    if (!iss.str().substr(iss.tellg()).empty())
+                        title = iss.str().substr(iss.tellg());
+                    topic(client, channel, title);
                     break;
                 }
                 else if (token == "KICK")

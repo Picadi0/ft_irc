@@ -41,6 +41,8 @@ public:
   int searchClientByUser(string user);
   void sendUsersInChannel(Channel &channel);
   void listChannelsss(Client client, string channelNames);
+  void topic(Client &client, string channelName, string topic);
+  Channel *searchChannel(string channelName);
   // constructors
   IRC(int port, string password);
   IRC(const IRC &irc);
