@@ -6,7 +6,7 @@ void IRC::notice(Client &sender, string target, string msg)
     cout << msg << endl;
     if (target[0] != '#') {
         if ((targetClient = findClient(target)))
-            sendMsg(sender.getSockfd(), "NOTICE "+target + " :" + msg); }
+            sendMsg(targetClient->getSockfd(), "NOTICE "+target + " :" + msg); }
     else
     {
         Channel *channel = findChannel(target);
