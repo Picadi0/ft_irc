@@ -7,7 +7,7 @@ void IRC::topic(Client &client, string channel, string topic)
         sendMsg(client.getSockfd(), "461 TOPIC :Not enough parameters");
         return;
     }
-    Channel *chan = searchChannel(channel);
+    Channel *chan = findChannel(channel);
     if (chan == NULL)
     {
         sendMsg(client.getSockfd(), "403 " + channel + " :No such channel");

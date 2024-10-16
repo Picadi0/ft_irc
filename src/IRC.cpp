@@ -210,13 +210,15 @@ int IRC::searchClientByUser(string user)
     return -1;
 }
 
-Channel *IRC::searchChannel(string name)
+Channel *IRC::findChannel(string name)
 {
     list<Channel>::iterator it = this->channels.begin();
     while (it != this->channels.end())
     {
         if (it->getName() == name)
+        {
             return &(*it);
+        }
         it++;
     }
     return NULL;

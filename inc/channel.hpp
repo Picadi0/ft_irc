@@ -24,7 +24,7 @@ public:
   void setModfd(int sockfd);
   int searchClientFdByNick(string nick);
   int searchClientFdByUser(string user);
-
+  Client *findClient(string nickName);
   // Get-Set
   string getName() { return this->name; }
   string getPass() { return this->pass; }
@@ -33,6 +33,7 @@ public:
   list<Client> &getClients() { return this->clients; }
   list<int> getModFd() { return this->modfd; }
   void removeModFd(int socketFd) { this->modfd.remove(socketFd); }
+  bool isOp(int socketFd);
 
   //---------------------
   void setName(string name) { this->name = name; }

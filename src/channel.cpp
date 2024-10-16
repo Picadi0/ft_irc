@@ -1,5 +1,6 @@
 #include "../inc/channel.hpp"
 #include "../inc/IRC.hpp"
+#include <algorithm>
 #include <string>
 Channel::Channel() {
   cout << FG_YELLOW << "   Channel Info\n"
@@ -15,6 +16,18 @@ Channel::Channel(string name, string pass)
 }
 
 Channel::~Channel() {}
+
+bool Channel::isOp(int socketFd)
+{
+    list<int>::iterator it = this->modfd.begin();
+    while (it != this->modfd.end())
+    {
+        if (*it == socketFd)
+            return true;
+        it++;
+    }
+    return false;
+}
 string Channel::getClientsNames()
 {
     string ret;
@@ -26,7 +39,17 @@ string Channel::getClientsNames()
     }
     return ret;
 }
-
+Client *Channel::findClient(string nickName)
+{
+    list<Client>::iterator it = this->clients.begin();
+    while (it != this->clients.end())
+    {
+        if (it->getNickname() == nickName)
+            return &(*it);
+        it++;
+    }
+    return NULL;
+}
 void Channel::addClient(Client &client)
 {
     std::list<Client>::iterator it = this->clients.begin();

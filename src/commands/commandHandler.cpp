@@ -1,6 +1,8 @@
 #include "../../inc/IRC.hpp"
 #include <_types/_nl_item.h>
 #include <algorithm>
+#include <cstddef>
+#include <exception>
 #include <string>
 #include <sys/socket.h>
 
@@ -205,56 +207,123 @@ void IRC::privmsg(string target, string _msg, int sender)
     }
 }
 
-void IRC::CommandHandler(Client &client, string cmd)
+void IRC::modecmd(string targetChannel, string mode, string param, Client &sender)
+{
+    if (!targetChannel.empty())
+    {
+        if (targetChannel[0] == '#')//target is channel
+        {
+            Channel *channel = findChannel(targetChannel);
+            if (channel != NULL && channel->isOp(sender.getSockfd()) == true)
+            {
+                if (mode == "+o" || mode == "-o")//Bir kullanıcıyı kanal operatörü yapar
+                {
+                    if (channel->findClient(param) != NULL && channel->findClient(param)->getSockfd() != sender.getSockfd())
+                    {
+                        if (mode == "+o")
+                            channel->setModfd(channel->findClient(param)->getSockfd());
+                        else
+                            channel->removeModFd(channel->findClient(param)->getSockfd());
+                        sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode + " " + channel->findClient(param)->getNickname());
+                        sendMyOperationOthers(*channel, sender,"MODE " + channel->getName() + " " + mode + " " + channel->findClient(param)->getNickname());
+                    }
+                }
+                else if (mode == "+t")//Sadece operatörlerin kanal konusunu değiştirebilmesini sağlar.
+                {
+                }
+                else if (mode == "+n")//Kanalda olmayan kullanıcıların mesaj gönderememesini sağlar.
+                {
+                }
+                else if (mode == "+k")//Kanal için bir şifre belirler.
+                {
+                    if (param.empty())//error empty password
+                    {
+                    }
+                    else
+                    {
+                    }
+                }
+                else if (mode == "+b")//Belirtilen kullanıcıyı banlar
+                {
+                }
+                else if (mode == "+i")//Davetli kullanıcı istisnası (invite-only kanallarda).
+                {
+                }
+                else if (mode == "+e")//Ban istisnası (banned kullanıcıları engel dışı tutar).
+                {
+                }
+                else if (mode == "+l")//Kanaldaki maksimum kullanıcı sayısını sınırlar.
+                {
+                }
+                //else if (mode == "+m")//Kanalı moderated yapar (sadece ses hakkı olanlar mesaj gönderebilir).
+                //else if (mode == "+v")//Bir kullanıcıya ses hakkı verir (moderated modda konuşabilir).
+            }
+            else
+            {
+                //error channel not found
+            }
+        }
+        else
+        {
+            //error syntax channel should start's with #
+        }
+    }
+    else
+    {
+        //error target empty
+    }
+}
+
+void IRC::CommandHandler(Client &sender, string cmd)
 {
     std::istringstream iss(cmd);
     string token, result;
     while (iss >> token)
     {
-        if (client.getPassword() != this->password)
+        if (sender.getPassword() != this->password)
         {
             if (token == "PASS")
             {
                 iss >> result;
                 if (result[0] == ':')
                     result.erase(0, 1);
-                client.setPassword(result);
-                if (client.getPassword() != this->password)
-                    sendMsg(client.getSockfd(), ERR_PASSWMISMATCH);
+                sender.setPassword(result);
+                if (sender.getPassword() != this->password)
+                    sendMsg(sender.getSockfd(), ERR_PASSWMISMATCH);
                 //else
                     //sendMsg(client.getSockfd(), ":GRANTED : Password is correct enter your USER&NICK");
             }
             else
-                sendMsg(client.getSockfd(), ERR_UNKNOWNCOMMAND);
+                sendMsg(sender.getSockfd(), ERR_UNKNOWNCOMMAND);
         }
         else
         {
-            if (!client.getIsAuthed())
+            if (!sender.getIsAuthed())
             {
                 if (token == "NICK")
                 {
                     iss >> result;
                     if (!result.empty() && searchClientByNick(result) == -1)
-                        client.setNickname(result);
+                        sender.setNickname(result);
                     else
-                        sendMsg(client.getSockfd(), ": NICK is empty / already taken");
+                        sendMsg(sender.getSockfd(), ": NICK is empty / already taken");
                 }
                 else if (token == "USER")
                 {
                     iss >> result;
                     if (!result.empty() && searchClientByUser(result) == -1)
-                        client.setUsername(result);
+                        sender.setUsername(result);
                     else
-                        sendMsg(client.getSockfd(), ": USER is empty / already taken");
+                        sendMsg(sender.getSockfd(), ": USER is empty / already taken");
                 }
                 else
                 {
-                    sendMsg(client.getSockfd(), token + " Command is not found. Please Enter your USER & NICK");
+                    sendMsg(sender.getSockfd(), token + " Command is not found. Please Enter your USER & NICK");
                 }
-                if (!client.getUsername().empty() && !client.getNickname().empty())
+                if (!sender.getUsername().empty() && !sender.getNickname().empty())
                 {
-                    sendMsg(client.getSockfd(), RPL_WELCOME(client.getNickname(),client.getUsername(),client.getHostInfo())));
-                    client.setIsAuthed(true);
+                    sendMsg(sender.getSockfd(), RPL_WELCOME(sender.getNickname(),sender.getUsername(),sender.getHostInfo())));
+                    sender.setIsAuthed(true);
                     break;
                 }
             }
@@ -264,7 +333,7 @@ void IRC::CommandHandler(Client &client, string cmd)
                 {
                     string target;
                     iss >> target;
-                    privmsg(target, iss.str().substr(iss.tellg()), client.getSockfd());
+                    privmsg(target, iss.str().substr(iss.tellg()), sender.getSockfd());
                     break;
                 }
                 else if (token == "JOIN" || token == "join")
@@ -272,9 +341,9 @@ void IRC::CommandHandler(Client &client, string cmd)
                     string channel, pwd;
                     iss >> channel >> pwd;
                     if (channel[0] == '#')
-                        JoinChannel(client, channel, pwd);
+                        JoinChannel(sender, channel, pwd);
                     else
-                        sendMsg(client.getSockfd(), "Error: Channel name should be start with #");
+                        sendMsg(sender.getSockfd(), "Error: Channel name should be start with #");
                     break;
                 }
                 else if (token == "PART")
@@ -282,23 +351,24 @@ void IRC::CommandHandler(Client &client, string cmd)
                     string channel;
                     iss >> channel;
                     if (channel[0] == '#')
-                        part(client, channel);
+                        part(sender, channel);
                     else
-                        sendMsg(client.getSockfd(), "Error: Channel name should be start with #");
+                        sendMsg(sender.getSockfd(), "Error: Channel name should be start with #");
                     checkChannelEmpty();
-                    transferOnOpLeave(client.getSockfd());
+                    transferOnOpLeave(sender.getSockfd());
                     break;
                 }
                 else if (token == "QUIT")//serverden ayrılıyor
                 {
-                    quit(client);
+                    int tmpfd = sender.getSockfd();
+                    quit(sender);
                     checkChannelEmpty();
-                    transferOnOpLeave(client.getSockfd());
+                    transferOnOpLeave(tmpfd);
                     break;
                 }
                 else if (token == "PING")
                 {
-                    sendMsg(client.getSockfd(), "PONG " + iss.str());
+                    sendMsg(sender.getSockfd(), "PONG " + iss.str());
                     break;
                 }
                 else if (token == "WHO")
@@ -306,9 +376,9 @@ void IRC::CommandHandler(Client &client, string cmd)
                     string channel;
                     iss >> channel;
                     if (channel[0] == '#')
-                        who(channel, true, client);
+                        who(channel, true, sender);
                     else
-                        who(channel, false, client);
+                        who(channel, false, sender);
                     break;
                 }
                 else if (token == "TOPIC")
@@ -317,7 +387,7 @@ void IRC::CommandHandler(Client &client, string cmd)
                     iss >> channel;
                     if (!iss.str().substr(iss.tellg()).empty())
                         title = iss.str().substr(iss.tellg());
-                    topic(client, channel, title);
+                    topic(sender, channel, title);
                     break;
                 }
                 else if (token == "KICK")
@@ -326,17 +396,17 @@ void IRC::CommandHandler(Client &client, string cmd)
                     iss >> channel >> targetUser;
                     if (channel[0] == '#')
                     {
-                        KickUser(client, channel, targetUser);
+                        KickUser(sender, channel, targetUser);
                     }
                     else
-                        sendMsg(client.getSockfd(), "Error: Channel name should start with #");
+                        sendMsg(sender.getSockfd(), "Error: Channel name should start with #");
                     break;
                 }
                 else if (token == "LIST")
                 {
                     string target;
                     iss >> target;
-                    listChannelsss(client, target);
+                    listChannelsss(sender, target);
                     break;
                 }
                 else if (token == "INVITE")
@@ -345,6 +415,9 @@ void IRC::CommandHandler(Client &client, string cmd)
                 }
                 else if (token == "MODE")//mod verir
                 {
+                    string target, mode, param;
+                    iss >> target >> mode >> param;
+                    modecmd(target, mode, param, sender);
                     break;
                 }
                 else if (token == "NOTICE")
@@ -353,7 +426,7 @@ void IRC::CommandHandler(Client &client, string cmd)
                 }
                 else
                 {
-                    sendMsg(client.getSockfd(), token + " Command is not found.");
+                    sendMsg(sender.getSockfd(), token + " Command is not found.");
                     break;
                 }
             }

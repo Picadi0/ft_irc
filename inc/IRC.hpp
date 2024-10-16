@@ -47,7 +47,8 @@ public:
   void sendUsersInChannel(Channel &channel);
   void listChannelsss(Client client, string channelNames);
   void topic(Client &client, string channelName, string topic);
-  Channel *searchChannel(string channelName);
+  Channel *findChannel(string channelName);
+  void modecmd(string target, string mode, string param, Client &sender);
   // constructors
   IRC(int port, string password);
   IRC(const IRC &irc);
