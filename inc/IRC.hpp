@@ -44,7 +44,10 @@ public:
   void sendMyJoinOthers(Channel &channel, Client &sender);
   void who(string channelName, bool isChannel, Client &sender);
   void sendMyOperationOthers(Channel &channel, Client &sender, string opmsg);
-
+  void sendUsersInChannel(Channel &channel);
+  void listChannelsss(Client client, string channelNames);
+  void topic(Client &client, string channelName, string topic);
+  Channel *searchChannel(string channelName);
   // constructors
   IRC(int port, string password);
   IRC(const IRC &irc);
