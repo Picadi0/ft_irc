@@ -266,7 +266,7 @@ void IRC::CommandHandler(Client &client, string cmd)
                     privmsg(target, iss.str().substr(iss.tellg()), client.getSockfd());
                     break;
                 }
-                else if (token == "JOIN")
+                else if (token == "JOIN" || token == "join")
                 {
                     string channel, pwd;
                     iss >> channel >> pwd;

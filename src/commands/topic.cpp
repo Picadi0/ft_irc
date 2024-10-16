@@ -20,4 +20,6 @@ void IRC::topic(Client &client, string channel, string topic)
     }
     string msg = "TOPIC " + channel + " :" + topic;
     sendMsg(client.getSockfd(), msg);
+    sendMyOperationOthers(*chan, client, msg);
+    chan->setTopic(topic);
 }
