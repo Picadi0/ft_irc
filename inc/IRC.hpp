@@ -37,16 +37,16 @@ public:
   void part(Client &client, string channelName);
   void quit(Client &client);
   void checkChannelEmpty();
+  void transferOnOpLeave(int sockfd);
   int searchClientByNick(string nick);
   int searchClientByUser(string user);
-  void sendUsersInChannel(Channel &channel);
-  void listChannelsss(Client client, string channelNames);
-  void topic(Client &client, string channelName, string topic);
-  Channel *searchChannel(string channelName);
+  void getUsersInChannel(Channel &channel, Client &Exclude);
+  void sendMyJoinOthers(Channel &channel, Client &sender);
+  void who(string channelName, bool isChannel, Client &sender);
+  void sendMyOperationOthers(Channel &channel, Client &sender, string opmsg);
+
   // constructors
   IRC(int port, string password);
   IRC(const IRC &irc);
   ~IRC() { close(sockfd); }
 };
-
-list<string> commandParse(string str);

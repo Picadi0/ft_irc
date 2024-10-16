@@ -22,6 +22,7 @@ Client::Client(const Client &client) {
       this->hostInfo = client.hostInfo;
       this->realname = client.realname;
       this->clientAddr = client.clientAddr;
+      this->isOp = client.isOp;
   }
 }
 
@@ -36,6 +37,7 @@ Client &Client::operator=(const Client &client) {
     this->hostInfo = client.hostInfo;
     this->realname = client.realname;
     this->clientAddr = client.clientAddr;
+    this->isOp = client.isOp;
   }
   return *this;
 }

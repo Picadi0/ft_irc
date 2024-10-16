@@ -32,6 +32,7 @@ public:
   string getClientsNames();
   list<Client> &getClients() { return this->clients; }
   list<int> getModFd() { return this->modfd; }
+  void removeModFd(int socketFd) { this->modfd.remove(socketFd); }
 
   //---------------------
   void setName(string name) { this->name = name; }

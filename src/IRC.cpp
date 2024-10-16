@@ -2,6 +2,7 @@
 #include "../inc/client.hpp"
 #include <arpa/inet.h>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <ostream>
 #include <sstream>
@@ -124,6 +125,40 @@ void IRC::checkChannelEmpty()
         it++;
     }
 }
+void IRC::transferOnOpLeave(int sockfd)
+{
+    list<Channel>::iterator channel = this->channels.begin();
+    list<Client>::iterator client;
+    list<Client>::iterator trueClient;
+    while (channel != this->channels.end())
+    {
+        if (find(channel->getModFd().begin(), channel->getModFd().end(), sockfd) != channel->getModFd().end())
+        {
+            channel->removeModFd(sockfd);
+            if (channel->getModFd().size() == 0)
+            {
+                int lowestSockFd = 2147483647;
+                client = channel->getClients().begin();
+                while (client != channel->getClients().end())
+                {
+                    if (client->getSockfd() < lowestSockFd)
+                    {
+                        trueClient = client;
+                        lowestSockFd = client->getSockfd();
+                    }
+                    client++;
+                }
+                if (lowestSockFd != 2147483647)
+                {
+                    channel->setModfd(lowestSockFd);
+                    sendMyOperationOthers(*channel, *trueClient, "MODE " + channel->getName() + " +o " + trueClient->getNickname());
+                    sendMsg(trueClient->getSockfd(), "MODE " + channel->getName() + " +o " + trueClient->getNickname());
+                }
+            }
+        }
+        channel++;
+    }
+}
 
 void IRC::handleClient(int sockfd)
 {
@@ -136,6 +171,7 @@ void IRC::handleClient(int sockfd)
       cout << FG_RED + client.getUsername() + " its Quit" + RESET;
     handleClientQuit(sockfd, this->masterfd, this->clients);
     checkChannelEmpty();
+    transferOnOpLeave(sockfd);
   }
   else
   {
