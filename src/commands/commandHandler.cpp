@@ -144,17 +144,18 @@ void IRC::JoinChannel(Client &sender, string channelName, string channelPwd)
     }
 }
 
-void IRC::part(Client &client, string channelName)
+void IRC::part(Client &sender, string channelName)
 {
-    sendAllClientMsg(this->clients, client.getIDENTITY() + " PART " + channelName);
+    sendMsg(sender.getSockfd(), sender.getIDENTITY() + " PART " + channelName);
     list<Channel>::iterator channel = this->channels.begin();
     while (channel != this->channels.end())
     {
         if (channel->getName() == channelName)
         {
-            channel->removeClient(client);
+            channel->removeClient(sender);
+            sendMyOperationOthers(*channel, sender,sender.getIDENTITY() + " PART " + channelName);
             cout << FG_RED << "{LOG}[" << sockfd << "] "
-                 << (client.getNickname().empty() ? "client" : client.getNickname())
+                 << (sender.getNickname().empty() ? "client" : sender.getNickname())
                  << " is disconnected from " << channelName <<  RESET << endl
                  << RESET;
             return;
