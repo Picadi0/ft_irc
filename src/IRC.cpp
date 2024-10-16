@@ -223,3 +223,14 @@ Channel *IRC::findChannel(string name)
     }
     return NULL;
 }
+Client *IRC::findClient(string nick)
+{
+    map<int,Client>::iterator it = this->clients.begin();
+    while (it != this->clients.end())
+    {
+        if (it->second.getNickname() == nick)
+            return &(it->second);
+        it++;
+    }
+    return NULL;
+}
