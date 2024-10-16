@@ -4,10 +4,20 @@
 #include <string>
 #include <sys/socket.h>
 
+void IRC::sendMyOperationOthers(Channel &channel, Client &sender, string opmsg)
+{
+    list<Client>::iterator client = channel.getClients().begin();
+    while(client != channel.getClients().end())
+    {
+        if (client->getSockfd() != sender.getSockfd())
+            sendMsg(client->getSockfd(), opmsg);
+        client++;
+    }
+}
+
 void IRC::sendMyJoinOthers(Channel &channel, Client &sender)
 {
     list<Client>::iterator client = channel.getClients().begin();
-    list<int>::iterator modfd;
     while(client != channel.getClients().end())
     {
         if (client->getSockfd() != sender.getSockfd())
@@ -17,19 +27,20 @@ void IRC::sendMyJoinOthers(Channel &channel, Client &sender)
         }
         client++;
     }
-
 }
 
 void IRC::getUsersInChannel(Channel &channel, Client &sender)
 {
     list<Client>::iterator client = channel.getClients().begin();
-    list<int>::iterator modfd;
     while(client != channel.getClients().end())
     {
         if (client->getSockfd() != sender.getSockfd())
         {
             sendMsg(sender.getSockfd(), client->getIDENTITY() + " JOIN " + channel.getName());
             sendMsg(sender.getSockfd(), RPL_TOPIC(client->getNickname(), channel.getName(), "42"));
+            if (find(channel.getModFd().begin(), channel.getModFd().end(), client->getSockfd()) != channel.getModFd().end())
+                sendMsg(sender.getSockfd(), "MODE " + channel.getName() + " +o " + client->getNickname());
+
         }
         client++;
     }
@@ -106,7 +117,7 @@ void IRC::JoinChannel(Client &sender, string channelName, string channelPwd)
             cout << sender.getNickname() << " joining channel" << endl;
             channel->addClient(sender);
             sendMsg(sender.getSockfd(), sender.getIDENTITY() + " JOIN " + channel->getName());
-            sendMsg(sender.getSockfd(), RPL_TOPIC(sender.getNickname(), channelName, "42"));
+            sendMsg(sender.getSockfd(), RPL_TOPIC(sender.getNickname(), channelName, channel->getTopic()));
             sendMyJoinOthers(*channel, sender);
             getUsersInChannel(*channel, sender);
             //sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
@@ -124,9 +135,10 @@ void IRC::JoinChannel(Client &sender, string channelName, string channelPwd)
         create.setName(channelName);
         create.setModfd(sender.getSockfd());
         create.addClient(sender);
+        create.setTopic("42 Default Topic");
         this->channels.push_back(create);
         sendMsg(sender.getSockfd(), joinopmsg);
-        sendMsg(sender.getSockfd(), RPL_TOPIC(sender.getNickname(), channelName, "42"));
+        sendMsg(sender.getSockfd(), RPL_TOPIC(sender.getNickname(), channelName, create.getTopic()));
         sendMsg(sender.getSockfd(), "MODE " + channelName + " +o " + sender.getNickname());
         //sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
     }
@@ -153,6 +165,7 @@ void IRC::part(Client &client, string channelName)
 
 void IRC::quit(Client &client)
 {
+    int saveSockfd;
     sendAllClientMsg(this->clients, client.getIDENTITY() + " QUIT Quit: ");
     cout << FG_RED << "{LOG}[" << sockfd << "] "
          << (client.getNickname().empty() ? "client" : client.getNickname())
@@ -160,8 +173,10 @@ void IRC::quit(Client &client)
          << RESET;
     close(client.getSockfd());
     FD_CLR(client.getSockfd(), &masterfd);
+    saveSockfd = client.getSockfd();
     this->clients.erase(client.getSockfd());
     checkChannelEmpty();
+    transferOnOpLeave(saveSockfd);
 }
 
 void IRC::privmsg(string target, string _msg, int sender)
@@ -271,13 +286,15 @@ void IRC::CommandHandler(Client &client, string cmd)
                         part(client, channel);
                     else
                         sendMsg(client.getSockfd(), "Error: Channel name should be start with #");
-                    //checkChannelEmpty();
+                    checkChannelEmpty();
+                    transferOnOpLeave(client.getSockfd());
                     break;
                 }
                 else if (token == "QUIT")//serverden ayrılıyor
                 {
                     quit(client);
-                    //checkChannelEmpty();
+                    checkChannelEmpty();
+                    transferOnOpLeave(client.getSockfd());
                     break;
                 }
                 else if (token == "PING")

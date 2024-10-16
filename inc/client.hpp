@@ -13,6 +13,7 @@ private:
   string hostInfo;
   string password;
   bool isAuthed;
+  bool isOp;
 
 
 public:

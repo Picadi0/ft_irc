@@ -37,11 +37,13 @@ public:
   void part(Client &client, string channelName);
   void quit(Client &client);
   void checkChannelEmpty();
+  void transferOnOpLeave(int sockfd);
   int searchClientByNick(string nick);
   int searchClientByUser(string user);
   void getUsersInChannel(Channel &channel, Client &Exclude);
   void sendMyJoinOthers(Channel &channel, Client &sender);
   void who(string channelName, bool isChannel, Client &sender);
+  void sendMyOperationOthers(Channel &channel, Client &sender, string opmsg);
 
   // constructors
   IRC(int port, string password);
