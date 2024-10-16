@@ -39,7 +39,8 @@ public:
   void checkChannelEmpty();
   int searchClientByNick(string nick);
   int searchClientByUser(string user);
-  void sendUsersInChannel(Channel &channel);
+  void getUsersInChannel(Channel &channel, Client &Exclude);
+  void sendMyJoinOthers(Channel &channel, Client &sender);
   void who(string channelName, bool isChannel, Client &sender);
 
   // constructors
