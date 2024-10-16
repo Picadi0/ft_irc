@@ -40,8 +40,11 @@ public:
   int searchClientByNick(string nick);
   int searchClientByUser(string user);
   void sendUsersInChannel(Channel &channel);
+  void listChannelsss(Client client, string channelNames);
   // constructors
   IRC(int port, string password);
   IRC(const IRC &irc);
   ~IRC() { close(sockfd); }
 };
+
+list<string> commandParse(string str);

@@ -239,6 +239,9 @@ void IRC::CommandHandler(Client &client, string cmd)
                 }
                 else if (token == "LIST")
                 {
+                    string target;
+                    iss >> target;
+                    listChannelsss(client, target);
                     break;
                 }
                 else if (token == "INVITE")
