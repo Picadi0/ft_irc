@@ -15,8 +15,8 @@ void IRC::privmsg(Client &sender,string target, string msg)
         Channel *channel = findChannel(target);
         if (channel)
         {
-            if (channel->getOnlyMembersCanMsg() == true && !channel->findClient(sender.getNickname()))
-                sendMsg(sender.getSockfd(), "NOTICE " + sender.getNickname() + " :You cannot send messages to this channel because you are not a member.");
+            if (channel->isBanned(sender.getHostInfo()) || (channel->getOnlyMembersCanMsg() == true && !channel->findClient(sender.getNickname())))
+                sendMsg(sender.getSockfd(), "NOTICE " + sender.getNickname() + " :You cannot send messages to this channel because you are not a member/banned.");
             else
                 if (msg[0] == ':')
                     sendMyOperationOthers(*channel, sender, sender.getIDENTITY()+"PRIVMSG "+target + " " + msg);

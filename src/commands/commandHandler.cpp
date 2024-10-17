@@ -87,7 +87,7 @@ void IRC::CommandHandler(Client &sender, string cmd)
                     transferOnOpLeave(sender.getSockfd());
                     break;
                 }
-                else if (token == "QUIT")//serverden ayrılıyor
+                else if (token == "QUIT")
                 {
                     int tmpfd = sender.getSockfd();
                     quit(sender);

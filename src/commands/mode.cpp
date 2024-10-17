@@ -1,4 +1,5 @@
 #include "../../inc/IRC.hpp"
+#include <unistd.h>
 
 void IRC::modecmd(string targetChannel, string mode, string param, Client &sender)
 {
@@ -7,84 +8,120 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
         if (targetChannel[0] == '#')//target is channel
         {
             Channel *channel = findChannel(targetChannel);
-            if (channel != NULL && channel->isOp(sender.getSockfd()) == true)
+            if (channel != NULL)
             {
-                if (mode == "+o" || mode == "-o")//Bir kullanıcıyı kanal operatörü yapar
+                if (mode == "b" && param.empty())
                 {
-                    if (channel->findClient(param) != NULL && channel->findClient(param)->getSockfd() != sender.getSockfd())
-                    {
-                        if (mode == "+o")
-                            channel->setModfd(channel->findClient(param)->getSockfd());
-                        else
-                            channel->removeModFd(channel->findClient(param)->getSockfd());
-                        sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode + " " + channel->findClient(param)->getNickname());
-                        sendMyOperationOthers(*channel, sender,"MODE " + channel->getName() + " " + mode + " " + channel->findClient(param)->getNickname());
-                    }
+                    if (channel->getBanList().size() <= 0)
+                        sendMsg(sender.getSockfd(), sender.getIDENTITY() + " 368 " + sender.getNickname() + " :End of channel ban list");
                     else
                     {
-                        sendMsg(sender.getSockfd(), "401 " + param + " :No such nick");
-                        return;
-                    }
-                }
-                else if (mode == "+t" || mode == "-t")//Sadece operatörlerin kanal konusunu değiştirebilmesini sağlar.
-                {
-                    if (mode == "+t")
-                        channel->onlyOpSetsTopic(true);
-                    else
-                        channel->onlyOpSetsTopic(false);
-                    sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode);
-                }
-                else if (mode == "+n" || mode == "-n")//Kanalda olmayan kullanıcıların mesaj gönderememesini sağlar.
-                {
-                    if(mode == "+n")
-                        channel->setOnlyMembersCanMsg(true);
-                    else
-                        channel->setOnlyMembersCanMsg(false);
-                    sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode);
-                }
-                else if (mode == "+k" || mode == "-k")//Kanal için bir şifre belirler.
-                {
-                    if(mode == "+k")
-                    {
-                        if (param.empty())//error empty password
+                        map<string, string>::iterator banned = channel->getBanList().begin();
+                        while (banned != channel->getBanList().end())
                         {
-                            sendMsg(sender.getSockfd(), "461 " + sender.getNickname() + " MODE +k :Not enough parameters");
+                            sendMsg(sender.getSockfd(),sender.getIDENTITY() + " 367 " + sender.getNickname() + " :" + channel->getName() + " " + banned->second + "!*@ " + banned->first);
+                            banned++;
+                        }
+                        sendMsg(sender.getSockfd(), sender.getIDENTITY() + " 368 " + sender.getNickname() + " :End of channel ban list");
+                    }
+                }
+                if (channel->isOp(sender.getSockfd()) == true)
+                {
+                    if (mode == "+o" || mode == "-o")//Bir kullanıcıyı kanal operatörü yapar
+                    {
+                        if (channel->findClient(param) != NULL && channel->findClient(param)->getSockfd() != sender.getSockfd())
+                        {
+                            if (mode == "+o")
+                                channel->setModfd(channel->findClient(param)->getSockfd());
+                            else
+                                channel->removeModFd(channel->findClient(param)->getSockfd());
+                            sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode + " " + channel->findClient(param)->getNickname());
+                            sendMyOperationOthers(*channel, sender,"MODE " + channel->getName() + " " + mode + " " + channel->findClient(param)->getNickname());
+                        }
+                        else
+                        {
+                            sendMsg(sender.getSockfd(), "401 " + param + " :No such nick");
                             return;
                         }
-                        else
-                        {
-                            channel->setPass(param);
-                            sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " +k " + param);
-                        }
-
                     }
-                    else // Kanal şifresini kaldırma
+                    else if (mode == "+t" || mode == "-t")//Sadece operatörlerin kanal konusunu değiştirebilmesini sağlar.
                     {
-                        channel->setRemovePass();
-                        sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " -k");
+                        if (mode == "+t")
+                            channel->onlyOpSetsTopic(true);
+                        else
+                            channel->onlyOpSetsTopic(false);
+                        sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode);
                     }
+                    else if (mode == "+n" || mode == "-n")//Kanalda olmayan kullanıcıların mesaj gönderememesini sağlar.
+                    {
+                        if(mode == "+n")
+                            channel->setOnlyMembersCanMsg(true);
+                        else
+                            channel->setOnlyMembersCanMsg(false);
+                        sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode);
+                    }
+                    else if (mode == "+k" || mode == "-k")//Kanal için bir şifre belirler.
+                    {
+                        if(mode == "+k")
+                        {
+                            if (param.empty())//error empty password
+                            {
+                                sendMsg(sender.getSockfd(), "461 " + sender.getNickname() + " MODE +k :Not enough parameters");
+                                return;
+                            }
+                            else
+                            {
+                                channel->setPass(param);
+                                sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " +k " + param);
+                            }
+                        }
+                        else // Kanal şifresini kaldırma
+                        {
+                            channel->setRemovePass();
+                            sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " -k");
+                        }
+                    }
+                    else if (mode == "+b" || mode == "-b")//Belirtilen kullanıcıyı banlar
+                    {
+                        if (!param.empty() )
+                        {
+                            if (mode == "+b")
+                            {
+                                Client *client = channel->findClient(param);
+                                if (client && !channel->isBanned(client->getHostInfo()) && channel->findClient(param)->getSockfd() != sender.getSockfd())
+                                {
+                                    channel->addBanList(param);
+                                    sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " +b :" + param);
+                                    sendMyOperationOthers(*channel, sender, "MODE " + channel->getName() + " +b :" + param);;
+                                    KickUser(sender,channel->getName(), client->getNickname());
+                                }
+                                else
+                                    sendMsg(sender.getSockfd(), "401 " + param + " :No such nick/already banned or don't try to ban yourself :c");
+                            }
+                            else
+                            {
+                                channel->removeBanList(param);
+                                sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " -b :" + param);
+                                sendMyOperationOthers(*channel, sender, "MODE " + channel->getName() + " +b :" + param);
+                            }
+
+                        }
+                    }
+                    else if (mode == "+i")//Davetli kullanıcı istisnası (invite-only kanallarda).
+                    {
+                    }
+                    else if (mode == "+e")//Ban istisnası (banned kullanıcıları engel dışı tutar).
+                    {
+                    }
+                    else if (mode == "+l")//Kanaldaki maksimum kullanıcı sayısını sınırlar.
+                    {
+                    }
+                    else {
+                        // invalid channel operator
+                    }
+                    //else if (mode == "+m")//Kanalı moderated yapar (sadece ses hakkı olanlar mesaj gönderebilir).
+                    //else if (mode == "+v")//Bir kullanıcıya ses hakkı verir (moderated modda konuşabilir).
                 }
-                else if (mode == "+b")//Belirtilen kullanıcıyı banlar
-                {
-                }
-                else if (mode == "+i")//Davetli kullanıcı istisnası (invite-only kanallarda).
-                {
-                }
-                else if (mode == "+e")//Ban istisnası (banned kullanıcıları engel dışı tutar).
-                {
-                }
-                else if (mode == "+l")//Kanaldaki maksimum kullanıcı sayısını sınırlar.
-                {
-                }
-                else if (mode.empty())
-                {
-                    //hangi modsa ona göre bilgi çekicek
-                }
-                else {
-                    // invalid channel operator
-                }
-                //else if (mode == "+m")//Kanalı moderated yapar (sadece ses hakkı olanlar mesaj gönderebilir).
-                //else if (mode == "+v")//Bir kullanıcıya ses hakkı verir (moderated modda konuşabilir).
             }
             else if (channel == NULL)
             {

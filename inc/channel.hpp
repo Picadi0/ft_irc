@@ -11,6 +11,7 @@ private:
   string pass;
   list<Client> clients;
   list<Client> invitedClients;
+  map<string, string> banList;
   list<int> modfd;
   bool TopicChangeByOp;
   bool OnlyMembersCanMsg;
@@ -22,6 +23,9 @@ public:
   ~Channel();
 
   void addClient(Client &client);
+  void addBanList(string nickName);
+  void removeBanList(string hostInfo);
+  bool isBanned(string hostInfo);
   void removeClient(Client &client);
   void setModfd(int sockfd);
   int searchClientFdByNick(string nick);
@@ -35,6 +39,7 @@ public:
   string getPass()               { return this->pass; }
   string getTopic()              { return this->topic; }
   list<Client> &getClients()     { return this->clients; }
+  map<string, string> &getBanList()     { return this->banList; }
   list<int> getModFd()           { return this->modfd; }
   bool getTopicChangeByOp()      { return this->TopicChangeByOp; };
   void removeModFd(int socketFd) { this->modfd.remove(socketFd); }

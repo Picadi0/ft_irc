@@ -1,6 +1,7 @@
 #include "../inc/channel.hpp"
 #include "../inc/IRC.hpp"
 #include <algorithm>
+#include <iostream>
 #include <string>
 Channel::Channel() {
   cout << FG_YELLOW << "   Channel Info\n"
@@ -116,7 +117,41 @@ void Channel::removeClient(Client &client)
         it++;
     }
 }
+
 void Channel::setModfd(int sockfd)
 {
     this->modfd.push_back(sockfd);
+}
+
+bool Channel::isBanned(string hostInfo)
+{
+    map<string ,string>::iterator itBanlist = this->banList.begin();
+    while (itBanlist != this->banList.end())
+    {
+        if (itBanlist->first == hostInfo)
+            return true;
+        itBanlist++;
+    }
+    return false;
+}
+
+void Channel::addBanList(string nickName)
+{
+    Client *client = findClient(nickName);
+    if (client)
+        this->banList.insert(pair<string, string>(client->getHostInfo(), nickName));
+}
+
+void Channel::removeBanList(string hostInfo)
+{
+    map<string ,string>::iterator itBanlist = this->banList.begin();
+    while (itBanlist != this->banList.end())
+    {
+        if (itBanlist->first == hostInfo)
+        {
+            this->banList.erase(itBanlist->first);
+            break;
+        }
+        itBanlist++;
+    }
 }
