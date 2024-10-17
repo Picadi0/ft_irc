@@ -265,7 +265,7 @@ void IRC::getUsersInChannel(Channel &channel, Client &sender)
     list<Client>::iterator client = channel.getClients().begin();
     while(client != channel.getClients().end())
     {
-        if (client->getSockfd() != sender.getSockfd())
+        if (client->getSockfd() != sender.getSockfd() && !channel.findInvisibleClient(client->getNickname()))
         {
             sendMsg(sender.getSockfd(), client->getIDENTITY() + " JOIN " + channel.getName());
             sendMsg(sender.getSockfd(), RPL_TOPIC(client->getNickname(), channel.getName(), "42"));

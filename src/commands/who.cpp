@@ -36,7 +36,7 @@ void IRC::who(string channelOrName, bool isChannel, Client &sender)
             client = channel->getClients().begin();
             if (client != channel->getClients().end())
             {
-                if (client->getNickname() == channelOrName)
+                if (client->getNickname() == channelOrName && !channel->findInvisibleClient(client->getNickname()))
                 {
                     sendMsg(sender.getSockfd(), ":server 352 " + sender.getNickname() + " " + channel->getName() + " " + client->getUsername() + " " + client->getHostInfo() + " " + "42Istanbul" + " " + client->getNickname() + " H :0 " + client->getRealname());
                     found = true;

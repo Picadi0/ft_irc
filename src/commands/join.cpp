@@ -1,9 +1,20 @@
 #include "../../inc/IRC.hpp"
+#include <string>
 
 void IRC::JoinChannel(Client &sender, string channelName, string channelPwd)
 {
     Channel *channel = findChannel(channelName);
     bool join = channel != NULL;
+    if (join && channel->getOnlyInviteMode() && !channel->findInvitedClient(sender.getNickname()))
+    {
+        sendMsg(sender.getSockfd(), "475 : Only Invited People can join the "  + channelName + " ");
+        return;
+    }
+    if (join && channel->getMaxClientCount() > 0 && (channel->getClients().size() >= channel->getMaxClientCount()))
+    {
+        sendMsg(sender.getSockfd(), "475 : Channel is full "  + channelName + " " + std::to_string(channel->getMaxClientCount()) + "/" + std::to_string(channel->getClients().size()));
+        return;
+    }
     if (join && channel->isBanned(sender.getHostInfo()))
     {
         sendMsg(sender.getSockfd(), "475 : Failed to join the " + channelName + " reason : BANNED");
@@ -20,7 +31,8 @@ void IRC::JoinChannel(Client &sender, string channelName, string channelPwd)
                 channel->addClient(sender);
                 sendMsg(sender.getSockfd(), sender.getIDENTITY() + " JOIN " + channel->getName());
                 sendMsg(sender.getSockfd(), RPL_TOPIC(sender.getNickname(), channelName, channel->getTopic()));
-                sendMyJoinOthers(*channel, sender);
+                if (!channel->findInvisibleClient(sender.getNickname()))
+                    sendMyJoinOthers(*channel, sender);
                 getUsersInChannel(*channel, sender);
                 if (channel->findInvitedClient(sender.getNickname()))
                     channel->removeInvitedClient(sender);
