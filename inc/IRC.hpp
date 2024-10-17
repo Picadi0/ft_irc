@@ -35,15 +35,24 @@ public:
   void KickUser(Client &client, const std::string &channelName, const std::string &targetUser);
   void InviteUser(Client &client, const std::string &channelName, const std::string &targetNick);
   int findClientByNickname(const std::string &nickname);
-  void privmsg(string targetfd, string msg, int sender);
+  void privmsg(Client &client, string target, string msg);
   void part(Client &client, string channelName);
   void quit(Client &client);
   void checkChannelEmpty();
+  void transferOnOpLeave(int sockfd);
   int searchClientByNick(string nick);
   int searchClientByUser(string user);
-  void sendUsersInChannel(Channel &channel);
+  void getUsersInChannel(Channel &channel, Client &Exclude);
+  void sendMyJoinOthers(Channel &channel, Client &sender);
   void who(string channelName, bool isChannel, Client &sender);
-
+  void sendMyOperationOthers(Channel &channel, Client &sender, string opmsg);
+  void sendUsersInChannel(Channel &channel);
+  void listChannelsss(Client client, string channelNames);
+  void topic(Client &client, string channelName, string topic);
+  Channel *findChannel(string channelName);
+  Client *findClient(string nick);
+  void modecmd(string target, string mode, string param, Client &sender);
+  void notice(Client &sender, string target, string msg);
   // constructors
   IRC(int port, string password);
   IRC(const IRC &irc);

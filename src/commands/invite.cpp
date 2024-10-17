@@ -59,21 +59,16 @@ void IRC::InviteUser(Client &client, const std::string &channelName, const std::
         sendMsg(client.getSockfd(), "401 " + targetNick + " :No such nick/channel");
         return;
     }
-        Client &targetClient = this->clients[targetSockfd];
-    if (targetClient.getInvited())
-    {
-        sendMsg(client.getSockfd(), "443 " + targetNick + " " + channelName + " :is already invited.");
-        return;
-    }
 
-    targetClient.setInvited(true); // Davet
+    Client &targetClient = this->clients[targetSockfd];
     // buraya koşul koyucazz
     // Hedef kullanıcı zaten kanalda mı?
-    /*if (it->searchClientFdByNick(targetNick))
+    if (it->searchClientFdByNick(targetNick) && targetClient.getInvited())
     {
-        sendMsg(client.getSockfd(), "443 " + targetNick + " " + channelName + " :is already on channel");
+        sendMsg(client.getSockfd(), "443 " + targetNick + " " + channelName + " :is already on channel / is already invited");
         return;
-    }*/
+    }
+     targetClient.setInvited(true); // Davet
 
     // Kullanıcıya davet gönder
     std::string inviteMessage = ":" + client.getNickname() + " INVITE " + targetNick + " :" + channelName;
@@ -81,5 +76,4 @@ void IRC::InviteUser(Client &client, const std::string &channelName, const std::
 
     // Daveti gönderen kullanıcıya onay mesajı
     sendMsg(client.getSockfd(), "341 " + client.getNickname() + " " + targetNick + " " + channelName);
-    cout << "alooo" << endl;
 }
