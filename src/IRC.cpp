@@ -58,27 +58,27 @@ void IRC::start()
     int selectStatus = select(this->maxfd + 1, &this->readfd, NULL, NULL, NULL);
     switch (selectStatus)
     {
-    case (0):
-    {
-      cout << FG_YELLOW << "Select Timeout..." << RESET << endl;
-      break;
-    }
-    case (-1):
-      throw runtime_error("Select error");
-    default:
-    {
-      for (int i = 0; i <= this->maxfd; i++)
-      {
-        if (FD_ISSET(i, &this->readfd))
+        case (0):
         {
-          if (i == this->sockfd)
-            newClientAdd();
-          else
-            handleClient(i);
+            cout << FG_YELLOW << "Select Timeout..." << RESET << endl;
+            break;
         }
-      }
-      break;
-    }
+        case (-1):
+            throw runtime_error("Select error");
+        default:
+        {
+            for (int i = 0; i <= this->maxfd; i++)
+            {
+                if (FD_ISSET(i, &this->readfd))
+                {
+                if (i == this->sockfd)
+                    newClientAdd();
+                else
+                    handleClient(i);
+                }
+            }
+            break;
+        }
     }
   }
 }
