@@ -175,13 +175,11 @@ void IRC::handleClient(int sockfd)
   else
   {
     buff[nbytes] = '\0';
-    string buffStr = string(buff);
-    if (buffStr.at(nbytes - 1) == '\n')
-      buffStr.erase(nbytes - 1, 1);
-    CommandHandler(client, buffStr.c_str());
+    CommandHandler(client, buff);
     cout << FG_CYAN << "{LOG}[" << sockfd << "] "
-            << (client.getNickname().empty() ? "Client" : client.getNickname())
-            << " : " << FG_WHITE << buffStr << endl << RESET;
+         << (client.getNickname().empty() ? "Client" : client.getNickname())
+         << " : " << FG_WHITE << buff << endl
+         << RESET;
   }
 }
 
