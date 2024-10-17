@@ -1,5 +1,6 @@
 #include "../../inc/IRC.hpp"
 #include "../../inc/libs.hpp"
+#include <cstddef>
 
 int Channel::searchClientFdByNick(string nick) {
     std::list<Client>::iterator it = clients.begin();
@@ -22,42 +23,44 @@ int Channel::searchClientFdByUser(string user) {
     return -1; // Kullanıcı bulunamadı
 }
 
-void IRC::KickUser(Client &client, const std::string &channelName, const std::string &targetNick)
+void IRC::KickUser(Client &sender, const std::string &channelName, const std::string &targetNick)
 {
     // Kanalı bul
-    std::list<Channel>::iterator it = this->channels.begin();
+    std::list<Channel>::iterator channel = this->channels.begin();
     bool channelFound = false;
-    while (it != this->channels.end())
+    while (channel != this->channels.end())
     {
-        if (it->getName() == channelName)
+        if (channel->getName() == channelName)
         {
             channelFound = true;
             break;
         }
-        ++it;
+        ++channel;
     }
     // Eğer kanal bulunamazsa, hata mesajı gönder
     if (!channelFound)
     {
-        sendMsg(client.getSockfd(), "403 " + channelName + " :No such channel");
+        sendMsg(sender.getSockfd(), "403 " + channelName + " :No such channel");
         return;
     }
     // Kullanıcı moderatör mü? (Soket numarası üzerinden kontrol yapılıyor)
-    if (std::find(it->getModFd().begin(), it->getModFd().end(), client.getSockfd()) == it->getModFd().end())
+    if (!channel->isOp(sender.getSockfd()))
     {
-        sendMsg(client.getSockfd(), "482 " + channelName + " :You're not channel operator");
+        sendMsg(sender.getSockfd(), "482 " + channelName + " :You're not channel operator");
         return;
     }
     // Hedef kullanıcı kanalda mı?
-    int targetSockfd = it->searchClientFdByNick(targetNick);
+    int targetSockfd = channel->searchClientFdByNick(targetNick);
+    Client *client = channel->findClient(targetNick);
     if (targetSockfd == -1)
     {
-        sendMsg(client.getSockfd(), "441 " + targetNick + " " + channelName + " :They aren't on that channel");
+        sendMsg(sender.getSockfd(), "441 " + targetNick + " " + channelName + " :They aren't on that channel");
         return;
     }
-    // Kullanıcıyı kanaldan çıkar
-    it->removeClient(client);
     // Kanaldaki tüm kullanıcılara KICK mesajı gönder
-    std::string kickMessage = ":" + client.getNickname() + " KICK " + channelName + " " + targetNick;
-    sendAllClientMsg(clients, kickMessage);
+    std::string kickMessage = ":" + sender.getNickname() + " KICK " + channelName + " " + targetNick;
+    sendMsg(sender.getSockfd(), kickMessage);
+    sendMyOperationOthers(*channel, sender, kickMessage);
+    // Kullanıcıyı kanaldan çıkar
+    channel->removeClient(*client);
 }

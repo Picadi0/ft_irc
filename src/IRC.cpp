@@ -132,7 +132,7 @@ void IRC::transferOnOpLeave(int sockfd)
     list<Client>::iterator trueClient;
     while (channel != this->channels.end())
     {
-        if (find(channel->getModFd().begin(), channel->getModFd().end(), sockfd) != channel->getModFd().end())
+        if (channel->isOp(sockfd))
         {
             channel->removeModFd(sockfd);
             if (channel->getModFd().size() == 0)

@@ -40,7 +40,7 @@ void IRC::getUsersInChannel(Channel &channel, Client &sender)
         {
             sendMsg(sender.getSockfd(), client->getIDENTITY() + " JOIN " + channel.getName());
             sendMsg(sender.getSockfd(), RPL_TOPIC(client->getNickname(), channel.getName(), "42"));
-            if (find(channel.getModFd().begin(), channel.getModFd().end(), client->getSockfd()) != channel.getModFd().end())
+            if (channel.isOp(client->getSockfd()))
                 sendMsg(sender.getSockfd(), "MODE " + channel.getName() + " +o " + client->getNickname());
 
         }
