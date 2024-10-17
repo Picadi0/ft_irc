@@ -16,7 +16,7 @@ int IRC::findClientByNickname(const std::string &nickname)
 }
 
 
-void IRC::InviteUser(Client &client, const std::string &channelName, const std::string &targetNick)
+void IRC::InviteUser(Client &sender, const std::string &channelName, const std::string &targetNick)
 {
     // Kanalı bul
     std::list<Channel>::iterator it = this->channels.begin();
@@ -40,14 +40,14 @@ void IRC::InviteUser(Client &client, const std::string &channelName, const std::
     // Eğer kanal bulunamazsa, hata mesajı gönder
     if (!channelFound)
     {
-        sendMsg(client.getSockfd(), "403 " + channelName + " :No such channel");
+        sendMsg(sender.getSockfd(), "403 " + channelName + " :No such channel");
         return;
     }
 
     // Kullanıcı moderatör mü? (Soket numarası üzerinden kontrol yapılıyor :)
-    if (std::find(it->getModFd().begin(), it->getModFd().end(), client.getSockfd()) == it->getModFd().end())
+    if (!it->isOp(sender.getSockfd()))
     {
-        sendMsg(client.getSockfd(), "482 " + channelName + " :You're not channel operator");
+        sendMsg(sender.getSockfd(), "482 " + channelName + " :You're not channel operator");
         return;
     }
 
@@ -56,7 +56,7 @@ void IRC::InviteUser(Client &client, const std::string &channelName, const std::
     int targetSockfd = findClientByNickname(targetNick);
     if (targetSockfd == -1)
     {
-        sendMsg(client.getSockfd(), "401 " + targetNick + " :No such nick/channel");
+        sendMsg(sender.getSockfd(), "401 " + targetNick + " :No such nick/channel");
         return;
     }
 
@@ -65,15 +65,15 @@ void IRC::InviteUser(Client &client, const std::string &channelName, const std::
     // Hedef kullanıcı zaten kanalda mı?
     if (it->searchClientFdByNick(targetNick) && targetClient.getInvited())
     {
-        sendMsg(client.getSockfd(), "443 " + targetNick + " " + channelName + " :is already on channel / is already invited");
+        sendMsg(sender.getSockfd(), "443 " + targetNick + " " + channelName + " :is already on channel / is already invited");
         return;
     }
      targetClient.setInvited(true); // Davet
 
     // Kullanıcıya davet gönder
-    std::string inviteMessage = ":" + client.getNickname() + " INVITE " + targetNick + " :" + channelName;
+    std::string inviteMessage = ":" + sender.getNickname() + " INVITE " + targetNick + " :" + channelName;
     sendMsg(targetSockfd, inviteMessage);
 
     // Daveti gönderen kullanıcıya onay mesajı
-    sendMsg(client.getSockfd(), "341 " + client.getNickname() + " " + targetNick + " " + channelName);
+    sendMsg(sender.getSockfd(), "341 " + sender.getNickname() + " " + targetNick + " " + channelName);
 }
