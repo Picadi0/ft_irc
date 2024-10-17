@@ -1,6 +1,7 @@
 #include "../inc/channel.hpp"
 #include "../inc/IRC.hpp"
 #include <algorithm>
+#include <cstdint>
 #include <iostream>
 #include <string>
 Channel::Channel() {
@@ -14,6 +15,8 @@ Channel::Channel(string name, string pass)
 {
     this->name = name;
     this->pass = pass;
+    this->maxClient = 0;
+    this->OnlyInviteMode = false;
 }
 
 Channel::~Channel() {}
@@ -153,5 +156,44 @@ void Channel::removeBanList(string hostInfo)
             break;
         }
         itBanlist++;
+    }
+}
+
+Client *Channel::findInvisibleClient(string nickName)
+{
+    list<Client>::iterator it = this->invisibleClients.begin();
+    while (it != this->invisibleClients.end())
+    {
+        if (it->getNickname() == nickName)
+            return &(*it);
+        it++;
+    }
+    return NULL;
+}
+void Channel::addInvisibleClient(Client &client)
+{
+    std::list<Client>::iterator it = this->invisibleClients.begin();
+    while (it != this->invisibleClients.end())
+    {
+        if (it->getSockfd() == client.getSockfd())
+        {
+            sendMsg(client.getSockfd(), "INFO : already invited");
+            return;
+        }
+        it++;
+    }
+    this->invisibleClients.push_back(client);
+}
+void Channel::removeInvisibleClient(Client &client)
+{
+    std::list<Client>::iterator it = this->invisibleClients.begin();
+    while (it != this->invisibleClients.end())
+    {
+        if (it->getSockfd() == client.getSockfd())
+        {
+            this->invisibleClients.erase(it);
+            return;
+        }
+        it++;
     }
 }

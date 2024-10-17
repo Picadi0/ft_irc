@@ -8,7 +8,7 @@ void IRC::listChannelsss(Client sender ,string channelNames)
     if (channelNames.empty())
         while (channel != this->channels.end())
         {
-            sendMsg(sender.getSockfd(), sender.getIDENTITY() + " 322 " + sender.getNickname() + " : " + channel->getName() + " " + std::to_string(channel->getClients().size()) + " :" + channel->getTopic());
+            sendMsg(sender.getSockfd(), sender.getIDENTITY() + " 322 " + sender.getNickname() + " : " + channel->getName() + " " + std::to_string(channel->getMaxClientCount())+ "/" + std::to_string(channel->getClients().size()) + " :" + channel->getTopic());
             channel++;
         }
     else

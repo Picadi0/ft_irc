@@ -1,4 +1,5 @@
 #include "../../inc/IRC.hpp"
+#include <exception>
 #include <unistd.h>
 
 void IRC::modecmd(string targetChannel, string mode, string param, Client &sender)
@@ -54,10 +55,7 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
                     }
                     else if (mode == "+n" || mode == "-n")//Kanalda olmayan kullanıcıların mesaj gönderememesini sağlar.
                     {
-                        if(mode == "+n")
-                            channel->setOnlyMembersCanMsg(true);
-                        else
-                            channel->setOnlyMembersCanMsg(false);
+                        channel->setOnlyMembersCanMsg(mode == "+n");
                         sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode);
                     }
                     else if (mode == "+k" || mode == "-k")//Kanal için bir şifre belirler.
@@ -107,14 +105,58 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
 
                         }
                     }
-                    else if (mode == "+i")//Davetli kullanıcı istisnası (invite-only kanallarda).
+                    else if (mode == "+i" || mode == "-i")//Davetli kullanıcı istisnası (invite-only kanallarda).
                     {
+                        if (param.empty())
+                        {
+                            sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode + " ");
+                            sendMyOperationOthers(*channel, sender, "MODE " + channel->getName() + " " + mode + " ");
+                            channel->setOnlyInviteMode(mode == "+i");
+                        }
+                        else
+                        {
+                            if (channel->findClient(param))
+                            {
+                                if (mode == "+i")
+                                    channel->addInvisibleClient(sender);
+                                else
+                                    channel->removeInvisibleClient(sender);
+                            }
+                            else
+                               sendMsg(sender.getSockfd(), "401 " + channel->getName() + " : not found user " + param);
+                        }
                     }
                     else if (mode == "+e")//Ban istisnası (banned kullanıcıları engel dışı tutar).
                     {
                     }
                     else if (mode == "+l")//Kanaldaki maksimum kullanıcı sayısını sınırlar.
                     {
+                        if (param.empty())
+                        {
+                            channel->setMaxClientCount(0);
+                            sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode + " 0");
+                            sendMyOperationOthers(*channel, sender, "MODE " + channel->getName() + " " + mode + " 0");
+                        }
+                        else
+                        {
+                            size_t setTo;
+                            try
+                            {
+                                setTo = std::stoul(param);
+                                if (setTo < 0)
+                                {
+                                    sendMsg(sender.getSockfd(), "401 " + param + " : malformed size for Channel -> " + param);
+                                    return;
+                                }
+                                channel->setMaxClientCount(setTo);
+                                sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode + " " + param);
+                                sendMyOperationOthers(*channel, sender, "MODE " + channel->getName() + " " + mode + " " + param);
+                            }
+                            catch (std::exception &e)
+                            {
+                                sendMsg(sender.getSockfd(), "401 " + param + " : malformed size for Channel -> " + param);
+                            }
+                        }
                     }
                     else {
                         // invalid channel operator
