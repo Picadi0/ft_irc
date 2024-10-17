@@ -33,6 +33,8 @@ public:
   void CommandHandler(Client &client, string cmd);
   void JoinChannel(Client &client, string channelName, string channelPwd);
   void KickUser(Client &client, const std::string &channelName, const std::string &targetUser);
+  void InviteUser(Client &client, const std::string &channelName, const std::string &targetNick);
+  int findClientByNickname(const std::string &nickname);
   void privmsg(Client &client, string target, string msg);
   void part(Client &client, string channelName);
   void quit(Client &client);
