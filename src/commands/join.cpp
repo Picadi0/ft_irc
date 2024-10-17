@@ -4,6 +4,11 @@ void IRC::JoinChannel(Client &sender, string channelName, string channelPwd)
 {
     Channel *channel = findChannel(channelName);
     bool join = channel != NULL;
+    if (join && channel->isBanned(sender.getHostInfo()))
+    {
+        sendMsg(sender.getSockfd(), "475 : Failed to join the " + channelName + " reason : BANNED");
+        return;
+    }
     string joinopmsg = sender.getIDENTITY() + " JOIN " + channelName;
     if (join)
     {
