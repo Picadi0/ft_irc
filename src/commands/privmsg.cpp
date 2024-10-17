@@ -12,14 +12,10 @@ void IRC::privmsg(Client &sender,string target, string msg)
         Channel *channel = findChannel(target);
         if (channel)
         {
-             if (channel->getOnlyMembersCanMsg() == true) {
-                int targetSockfd = channel->searchClientFdByNick(sender.getNickname());
-                if (targetSockfd == -1) {
-                    sendMsg(sender.getSockfd(), "NOTICE " + sender.getNickname() + " :You cannot send messages to this channel because you are not a member.");
-                    return;
-                }
-            }
-            sendMyOperationOthers(*channel, sender, sender.getIDENTITY()+"PRIVMSG "+target + " " + msg);
+            if (channel->getOnlyMembersCanMsg() == true && !channel->findClient(sender.getNickname()))
+                sendMsg(sender.getSockfd(), "NOTICE " + sender.getNickname() + " :You cannot send messages to this channel because you are not a member.");
+            else
+                sendMyOperationOthers(*channel, sender, sender.getIDENTITY()+"PRIVMSG "+target + " " + msg);
         }
         else
             sendMsg(sender.getSockfd(), "NOTICE "+ sender.getNickname()+" :No such channel");

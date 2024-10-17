@@ -117,8 +117,7 @@ void IRC::checkChannelEmpty()
     {
         if (it->getClients().size() == 0)
         {
-            cout << FG_RED << "{LOG}"
-            "Destroyed the channel " << it->getName() << RESET << endl;
+            cout << FG_RED << "{LOG}Destroyed the channel " << it->getName() << RESET << endl;
             this->channels.erase(it);
             break;
         }

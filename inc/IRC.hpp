@@ -38,6 +38,7 @@ public:
   void privmsg(Client &client, string target, string msg);
   void part(Client &client, string channelName);
   void quit(Client &client);
+  void cleanBufferOnLeave(Client &client);
   void checkChannelEmpty();
   void transferOnOpLeave(int sockfd);
   int searchClientByNick(string nick);

@@ -29,7 +29,7 @@ void IRC::JoinChannel(Client &sender, string channelName, string channelPwd)
         }
         else
         {
-            sendMsg(sender.getSockfd(), "INFO : You are already in this channel");
+            sendMsg(sender.getSockfd(), "INFO31 : You are already in this channel");
             return;
         }
     }
