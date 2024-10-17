@@ -203,8 +203,12 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
                         sendMyOperationOthers(*channel, sender,"MODE " + channel->getName() + " " + mode + " " + channel->findClient(param)->getNickname());
                     }
                 }
-                else if (mode == "+t")//Sadece operatörlerin kanal konusunu değiştirebilmesini sağlar.
+                else if (mode == "+t" || mode == "-t")//Sadece operatörlerin kanal konusunu değiştirebilmesini sağlar.
                 {
+                    if (mode == "+t")
+                        channel->onlyOpSetsTopic(true);
+                    else
+                        channel->onlyOpSetsTopic(false);
                 }
                 else if (mode == "+n")//Kanalda olmayan kullanıcıların mesaj gönderememesini sağlar.
                 {

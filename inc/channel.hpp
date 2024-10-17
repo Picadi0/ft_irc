@@ -11,7 +11,7 @@ private:
   string pass;
   list<Client> clients;
   list<int> modfd;
-
+  bool TopicChangeByOp;
   Channel();
 
 public:
@@ -26,19 +26,22 @@ public:
   int searchClientFdByUser(string user);
   Client *findClient(string nickName);
   // Get-Set
-  string getName() { return this->name; }
-  string getPass() { return this->pass; }
-  string getTopic() { return this->topic; }
-  string getClientsNames();
-  list<Client> &getClients() { return this->clients; }
-  list<int> getModFd() { return this->modfd; }
+  string getName()               { return this->name; }
+  string getPass()               { return this->pass; }
+  string getTopic()              { return this->topic; }
+  list<Client> &getClients()     { return this->clients; }
+  list<int> getModFd()           { return this->modfd; }
+  bool getTopicChangeByOp()      { return this->TopicChangeByOp; };
   void removeModFd(int socketFd) { this->modfd.remove(socketFd); }
+  string getClientsNames();
   bool isOp(int socketFd);
 
   //---------------------
-  void setName(string name) { this->name = name; }
-  void setPass(string pass) { this->pass = pass; }
-  void setTopic(string topic) { this->topic = topic; }
+  void setName(string name)         { this->name = name; }
+  void setPass(string pass)         { this->pass = pass; }
+  void setTopic(string topic)       { this->topic = topic; }
+  void onlyOpSetsTopic(bool flag)   { this->TopicChangeByOp = flag; };
+
 };
 
 void sendMsg(int targetFd, string msg);

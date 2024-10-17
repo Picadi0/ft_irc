@@ -1,25 +1,28 @@
 #include "../../inc/IRC.hpp"
+#include <cstddef>
 
-void IRC::topic(Client &client, string channel, string topic)
+void IRC::topic(Client &sender, string channel, string topic)
 {
     if (channel.empty() && topic.empty())
     {
-        sendMsg(client.getSockfd(), "461 TOPIC :Not enough parameters");
+        sendMsg(sender.getSockfd(), "461 TOPIC :Not enough parameters");
         return;
     }
     Channel *chan = findChannel(channel);
     if (chan == NULL)
     {
-        sendMsg(client.getSockfd(), "403 " + channel + " :No such channel");
+        sendMsg(sender.getSockfd(), "403 " + channel + " :No such channel");
         return;
     }
-    if (topic.empty())
+    if (chan->getTopicChangeByOp() && !chan->isOp(sender.getSockfd()))
     {
-        sendMsg(client.getSockfd(), "332 " + channel + " :" + chan->getTopic());
+        sendMsg(sender.getSockfd(), "Error :Only operators can change topic");
         return;
     }
-    string msg = "TOPIC " + channel + " :" + topic;
-    sendMsg(client.getSockfd(), msg);
-    sendMyOperationOthers(*chan, client, msg);
+    if (chan->findClient(sender.getNickname()) != NULL)
+    {
+        sendMsg(sender.getSockfd(), "332 " + channel + " :" + topic);
+    }
+    sendMyOperationOthers(*chan, sender, RPL_TOPIC(sender.getNickname(), channel, topic));
     chan->setTopic(topic);
 }
