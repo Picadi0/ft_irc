@@ -1,17 +1,5 @@
 #include "../../inc/IRC.hpp"
 
-string fullMsg(std::istringstream iss) {
-  string result = "";
-  string msg;
-  while (iss >> msg) {
-    if (result.empty())
-      result = msg;
-    else
-      result += " " + msg;
-  }
-  return result;
-}
-
 void sendMsg(int targetFd, string msg)
 {
     //cout << FG_CYAN<< "{LOG}{Send}[" << targetFd << "]"<< FG_WHITE <<(msg + "\r\n").c_str();

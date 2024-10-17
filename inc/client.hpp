@@ -18,7 +18,7 @@ private:
 
 
 public:
-  Client(): isInvited(false) {}
+  Client();
   Client(int sockfd, sockaddr_in sockAddr);
   Client(const Client &client);
   Client &operator=(const Client &client);
@@ -29,7 +29,6 @@ public:
 	return (":" + this->nickname + "!" + this->username + "@" + this->hostInfo + " ");
   }
   // get-set
-  void setInvited(bool invited) { isInvited = invited; }
   void setUsername(string username) { this->username = username; }
   void setNickname(string nickname) { this->nickname = nickname; }
   void setRealname(string realname) { this->realname = realname; }
@@ -47,5 +46,4 @@ public:
   string getHostInfo() { return this->hostInfo; }
   string getPassword() { return this->password; }
   bool getIsAuthed() { return this->isAuthed; }
-  bool getInvited() const { return isInvited; }
 };

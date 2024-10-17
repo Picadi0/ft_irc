@@ -223,6 +223,7 @@ Channel *IRC::findChannel(string name)
     }
     return NULL;
 }
+
 Client *IRC::findClient(string nick)
 {
     map<int,Client>::iterator it = this->clients.begin();
@@ -233,4 +234,46 @@ Client *IRC::findClient(string nick)
         it++;
     }
     return NULL;
+}
+
+void IRC::sendMyOperationOthers(Channel &channel, Client &sender, string opmsg)
+{
+    list<Client>::iterator client = channel.getClients().begin();
+    while(client != channel.getClients().end())
+    {
+        if (client->getSockfd() != sender.getSockfd())
+            sendMsg(client->getSockfd(), opmsg);
+        client++;
+    }
+}
+
+void IRC::sendMyJoinOthers(Channel &channel, Client &sender)
+{
+    list<Client>::iterator client = channel.getClients().begin();
+    while(client != channel.getClients().end())
+    {
+        if (client->getSockfd() != sender.getSockfd())
+        {
+            sendMsg(client->getSockfd(), sender.getIDENTITY() + " JOIN " + channel.getName());
+            sendMsg(client->getSockfd(), RPL_TOPIC(sender.getNickname(), channel.getName(), "42"));
+        }
+        client++;
+    }
+}
+
+void IRC::getUsersInChannel(Channel &channel, Client &sender)
+{
+    list<Client>::iterator client = channel.getClients().begin();
+    while(client != channel.getClients().end())
+    {
+        if (client->getSockfd() != sender.getSockfd())
+        {
+            sendMsg(sender.getSockfd(), client->getIDENTITY() + " JOIN " + channel.getName());
+            sendMsg(sender.getSockfd(), RPL_TOPIC(client->getNickname(), channel.getName(), "42"));
+            if (channel.isOp(client->getSockfd()))
+                sendMsg(sender.getSockfd(), "MODE " + channel.getName() + " +o " + client->getNickname());
+
+        }
+        client++;
+    }
 }

@@ -18,24 +18,8 @@ int IRC::findClientByNickname(const std::string &nickname)
 
 void IRC::InviteUser(Client &sender, const std::string &channelName, const std::string &targetNick)
 {
-    // Kanalı bul
-    std::list<Channel>::iterator it = this->channels.begin();
-    bool channelFound = false;
-   // int i = 0;
-
-    while (it != this->channels.end())
-    {
-        /*cout << i++ << endl;
-        cout << "getname" << it->getName() << endl;
-        cout << "chaneelName" <<  channelName << endl;
-        */
-        if (it->getName() == channelName)
-        {
-            channelFound = true;
-            break;
-        }
-        it++;
-    }
+    Channel *channel = findChannel(channelName);
+    bool channelFound = channel != NULL;
 
     // Eğer kanal bulunamazsa, hata mesajı gönder
     if (!channelFound)
@@ -45,7 +29,7 @@ void IRC::InviteUser(Client &sender, const std::string &channelName, const std::
     }
 
     // Kullanıcı moderatör mü? (Soket numarası üzerinden kontrol yapılıyor :)
-    if (!it->isOp(sender.getSockfd()))
+    if (!channel->isOp(sender.getSockfd()))
     {
         sendMsg(sender.getSockfd(), "482 " + channelName + " :You're not channel operator");
         return;
@@ -60,15 +44,13 @@ void IRC::InviteUser(Client &sender, const std::string &channelName, const std::
         return;
     }
 
-    Client &targetClient = this->clients[targetSockfd];
-    // buraya koşul koyucazz
     // Hedef kullanıcı zaten kanalda mı?
-    if (it->searchClientFdByNick(targetNick) && targetClient.getInvited())
+    if (channel->findClient(targetNick) || channel->findInvitedClient(targetNick))
     {
         sendMsg(sender.getSockfd(), "443 " + targetNick + " " + channelName + " :is already on channel / is already invited");
         return;
     }
-     targetClient.setInvited(true); // Davet
+    channel->addInvitedClient(*findClient(targetNick));
 
     // Kullanıcıya davet gönder
     std::string inviteMessage = ":" + sender.getNickname() + " INVITE " + targetNick + " :" + channelName;

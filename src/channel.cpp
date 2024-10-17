@@ -50,6 +50,45 @@ Client *Channel::findClient(string nickName)
     }
     return NULL;
 }
+Client *Channel::findInvitedClient(string nickName)
+{
+    list<Client>::iterator it = this->invitedClients.begin();
+    while (it != this->invitedClients.end())
+    {
+        if (it->getNickname() == nickName)
+            return &(*it);
+        it++;
+    }
+    return NULL;
+}
+void Channel::addInvitedClient(Client &client)
+{
+    std::list<Client>::iterator it = this->invitedClients.begin();
+    while (it != this->invitedClients.end())
+    {
+        if (it->getSockfd() == client.getSockfd())
+        {
+            sendMsg(client.getSockfd(), "INFO : already invited");
+            return;
+        }
+        it++;
+    }
+    this->invitedClients.push_back(client);
+}
+void Channel::removeInvitedClient(Client &client)
+{
+    std::list<Client>::iterator it = this->invitedClients.begin();
+    while (it != this->invitedClients.end())
+    {
+        if (it->getSockfd() == client.getSockfd())
+        {
+            this->invitedClients.erase(it);
+            return;
+        }
+        it++;
+    }
+}
+
 void Channel::addClient(Client &client)
 {
     std::list<Client>::iterator it = this->clients.begin();

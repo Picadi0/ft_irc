@@ -10,6 +10,7 @@ private:
   string topic;
   string pass;
   list<Client> clients;
+  list<Client> invitedClients;
   list<int> modfd;
   bool TopicChangeByOp;
   bool OnlyMembersCanMsg;
@@ -20,13 +21,15 @@ public:
   Channel(string name, string pass);
   ~Channel();
 
-  int addModfd(int sockfd);
   void addClient(Client &client);
   void removeClient(Client &client);
   void setModfd(int sockfd);
   int searchClientFdByNick(string nick);
   int searchClientFdByUser(string user);
   Client *findClient(string nickName);
+  Client *findInvitedClient(string nickName);
+  void    addInvitedClient(Client &client);
+  void    removeInvitedClient(Client &client);
   // Get-Set
   string getName()               { return this->name; }
   string getPass()               { return this->pass; }
