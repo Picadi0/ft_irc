@@ -13,6 +13,7 @@ private:
   list<int> modfd;
   bool TopicChangeByOp;
   bool OnlyMembersCanMsg;
+  bool noExternalMsg; // Kanal dışı mesajları engellemek için
   Channel();
 
 public:
@@ -44,6 +45,7 @@ public:
   void setTopic(string topic)       { this->topic = topic; }
   void onlyOpSetsTopic(bool flag)   { this->TopicChangeByOp = flag; };
   void setOnlyMembersCanMsg(bool flag)   { this->OnlyMembersCanMsg = flag; };
+  void setRemovePass() { this->pass.clear(); };
 
 };
 
