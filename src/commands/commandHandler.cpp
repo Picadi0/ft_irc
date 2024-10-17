@@ -135,13 +135,16 @@ void IRC::JoinChannel(Client &sender, string channelName, string channelPwd)
         cout << sender.getNickname() << " creating channel" << endl;
         Channel create(channelName,channelPwd);
         create.setName(channelName);
+        create.setPass(channelPwd);
         create.setModfd(sender.getSockfd());
         create.addClient(sender);
         create.setTopic("42 Default Topic");
+        create.setOnlyMembersCanMsg(false);
         this->channels.push_back(create);
         sendMsg(sender.getSockfd(), joinopmsg);
         sendMsg(sender.getSockfd(), RPL_TOPIC(sender.getNickname(), channelName, create.getTopic()));
         sendMsg(sender.getSockfd(), "MODE " + channelName + " +o " + sender.getNickname());
+        sendMsg(sender.getSockfd(), "MODE " + channelName + " +k " + channelPwd); // sifreyi yazdırmak ???
         //sendAllClientMsg(clients, "331 : " + client.getNickname() + channelName + ":No topic is set");
     }
 }
@@ -186,6 +189,7 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
 {
     if (!targetChannel.empty())
     {
+        
         if (targetChannel[0] == '#')//target is channel
         {
             Channel *channel = findChannel(targetChannel);
@@ -202,6 +206,11 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
                         sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode + " " + channel->findClient(param)->getNickname());
                         sendMyOperationOthers(*channel, sender,"MODE " + channel->getName() + " " + mode + " " + channel->findClient(param)->getNickname());
                     }
+                    else
+                    {
+                        sendMsg(sender.getSockfd(), "401 " + param + " :No such nick");
+                        return;
+                    }
                 }
                 else if (mode == "+t" || mode == "-t")//Sadece operatörlerin kanal konusunu değiştirebilmesini sağlar.
                 {
@@ -209,19 +218,39 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
                         channel->onlyOpSetsTopic(true);
                     else
                         channel->onlyOpSetsTopic(false);
+                    sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode);
                 }
-                else if (mode == "+n")//Kanalda olmayan kullanıcıların mesaj gönderememesini sağlar.
+                else if (mode == "+n" || mode == "-n")//Kanalda olmayan kullanıcıların mesaj gönderememesini sağlar.
                 {
+                    if(mode == "+n")
+                        channel->setOnlyMembersCanMsg(true);
+                    else   
+                        channel->setOnlyMembersCanMsg(false);
+                    sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode);
                 }
-                else if (mode == "+k")//Kanal için bir şifre belirler.
+                else if (mode == "+k" || mode == "-k")//Kanal için bir şifre belirler.
                 {
-                    if (param.empty())//error empty password
+                    if(mode == "+k")
                     {
+                        if (param.empty())//error empty password
+                        {
+                            sendMsg(sender.getSockfd(), "461 " + sender.getNickname() + " MODE +k :Not enough parameters");
+                            return;
+                        }
+                        else
+                        {
+                            channel->setPass(param);
+                            sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " +k " + param);
+                        }
+
                     }
-                    else
+                    else // Kanal şifresini kaldırma
                     {
+                        channel->setRemovePass();
+                        sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " -k");
                     }
                 }
+                
                 else if (mode == "+b")//Belirtilen kullanıcıyı banlar
                 {
                 }
@@ -237,19 +266,27 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
                 //else if (mode == "+m")//Kanalı moderated yapar (sadece ses hakkı olanlar mesaj gönderebilir).
                 //else if (mode == "+v")//Bir kullanıcıya ses hakkı verir (moderated modda konuşabilir).
             }
+            else if (channel == NULL)
+            {
+                sendMsg(sender.getSockfd(), "403 " + targetChannel + " :No such channel");
+                return;
+            }
             else
             {
-                //error channel not found
+                sendMsg(sender.getSockfd(), "482 " + targetChannel + " :You're not channel operator"); 
+                return;
             }
         }
         else
         {
-            //error syntax channel should start's with #
+            sendMsg(sender.getSockfd(), "476 " + targetChannel + " :Invalid channel name");
+            return;
         }
     }
     else
     {
-        //error target empty
+        sendMsg(sender.getSockfd(), "472 " + mode + " :is unknown mode char to me");
+        return;
     }
 }
 
@@ -388,6 +425,13 @@ void IRC::CommandHandler(Client &sender, string cmd)
                 }
                 else if (token == "INVITE")
                 {
+                    std::string targetNick, channelName;
+                    iss >> targetNick >> channelName;
+
+                    if (targetNick.empty() || channelName.empty())
+                        sendMsg(sender.getSockfd(), "461 INVITE :Not enough parameters");
+                    else
+                        InviteUser(sender, channelName, targetNick);
                     break;
                 }
                 else if (token == "MODE")//mod verir
