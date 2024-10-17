@@ -58,27 +58,27 @@ void IRC::start()
     int selectStatus = select(this->maxfd + 1, &this->readfd, NULL, NULL, NULL);
     switch (selectStatus)
     {
-    case (0):
-    {
-      cout << FG_YELLOW << "Select Timeout..." << RESET << endl;
-      break;
-    }
-    case (-1):
-      throw runtime_error("Select error");
-    default:
-    {
-      for (int i = 0; i <= this->maxfd; i++)
-      {
-        if (FD_ISSET(i, &this->readfd))
+        case (0):
         {
-          if (i == this->sockfd)
-            newClientAdd();
-          else
-            handleClient(i);
+            cout << FG_YELLOW << "Select Timeout..." << RESET << endl;
+            break;
         }
-      }
-      break;
-    }
+        case (-1):
+            throw runtime_error("Select error");
+        default:
+        {
+            for (int i = 0; i <= this->maxfd; i++)
+            {
+                if (FD_ISSET(i, &this->readfd))
+                {
+                if (i == this->sockfd)
+                    newClientAdd();
+                else
+                    handleClient(i);
+                }
+            }
+            break;
+        }
     }
   }
 }
@@ -175,11 +175,13 @@ void IRC::handleClient(int sockfd)
   else
   {
     buff[nbytes] = '\0';
-    CommandHandler(client, buff);
+    string buffStr = string(buff);
+    if (buffStr.at(nbytes - 1) == '\n')
+      buffStr.erase(nbytes - 1, 1);
+    CommandHandler(client, buffStr.c_str());
     cout << FG_CYAN << "{LOG}[" << sockfd << "] "
-         << (client.getNickname().empty() ? "Client" : client.getNickname())
-         << " : " << FG_WHITE << buff << endl
-         << RESET;
+            << (client.getNickname().empty() ? "Client" : client.getNickname())
+            << " : " << FG_WHITE << buffStr << endl << RESET;
   }
 }
 
