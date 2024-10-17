@@ -29,16 +29,14 @@ IRC::IRC(int port, string password)
   this->serverAddr.sin_addr.s_addr = INADDR_ANY;
   this->serverAddr.sin_port = htons(this->port);
   memset(&(this->serverAddr.sin_zero), '\0', 8);
-  if (bind(this->sockfd, (struct sockaddr *)&this->serverAddr,
-           sizeof(this->serverAddr)) < 0)
+  if (bind(this->sockfd, (struct sockaddr *)&this->serverAddr, sizeof(this->serverAddr)) < 0)
     throw runtime_error("Bind error");
   cout << FG_GREEN << "Binded to port " << this->port << RESET << endl;
   if (listen(this->sockfd, BACKLOG) < 0)
     throw runtime_error("Listen error");
   FD_SET(this->sockfd, &this->masterfd);
   this->maxfd = this->sockfd;
-  cout << FG_GREEN << "Listening on port " << this->port << RESET << "\n"
-       << endl;
+  cout << FG_GREEN << "Listening on port " << this->port << RESET << "\n" << endl;
 };
 
 IRC::IRC(const IRC &irc)
@@ -158,29 +156,33 @@ void IRC::transferOnOpLeave(int sockfd)
         channel++;
     }
 }
-
 void IRC::handleClient(int sockfd)
 {
-  Client &client = this->clients.find(sockfd)->second;
-  char buff[BUFFER_SIZE] = {0};
-  int nbytes;
-  if ((nbytes = recv(client.getSockfd(), buff, sizeof(buff) - 1, 0)) <= 0)
-  {
-    if (nbytes != 0)
-      cout << FG_RED + client.getUsername() + " its Quit" + RESET;
-    handleClientQuit(sockfd, this->masterfd, this->clients);
-    checkChannelEmpty();
-    transferOnOpLeave(sockfd);
-  }
-  else
-  {
-    buff[nbytes] = '\0';
-    CommandHandler(client, buff);
-    cout << FG_CYAN << "{LOG}[" << sockfd << "] "
-         << (client.getNickname().empty() ? "Client" : client.getNickname())
-         << " : " << FG_WHITE << buff << endl
-         << RESET;
-  }
+    Client &client = this->clients.find(sockfd)->second;
+    char buff[BUFFER_SIZE] = {0};
+    int nbytes;
+
+    if ((nbytes = recv(client.getSockfd(), buff, sizeof(buff) - 1, 0)) <= 0)
+    {
+        if (nbytes != 0)
+            cout << FG_RED + client.getUsername() + " its Quit" + RESET;
+        handleClientQuit(sockfd, this->masterfd, this->clients);
+        checkChannelEmpty();
+        transferOnOpLeave(sockfd);
+    }
+    else
+    {
+        addbuff(sockfd, buff);
+        if (getbuff(sockfd).find('\n') != string::npos)
+        {
+            CommandHandler(client, getbuff(sockfd));
+            cout << FG_CYAN << "{LOG}[" << sockfd << "] "
+                 << (client.getNickname().empty() ? "Client" : client.getNickname())
+                 << " : " << FG_WHITE << getbuff(sockfd) << endl
+                 << RESET;
+            clearbuff(sockfd);  // Buffer'ı temizle
+        }
+    }
 }
 
 int IRC::searchClientByNick(string nick)
@@ -265,7 +267,7 @@ void IRC::getUsersInChannel(Channel &channel, Client &sender)
     list<Client>::iterator client = channel.getClients().begin();
     while(client != channel.getClients().end())
     {
-        if (client->getSockfd() != sender.getSockfd() && !channel.findInvisibleClient(client->getNickname()))
+        if (client->getSockfd() != sender.getSockfd() && !findClient(client->getNickname())->isInvisible())
         {
             sendMsg(sender.getSockfd(), client->getIDENTITY() + " JOIN " + channel.getName());
             sendMsg(sender.getSockfd(), RPL_TOPIC(client->getNickname(), channel.getName(), "42"));
@@ -276,3 +278,22 @@ void IRC::getUsersInChannel(Channel &channel, Client &sender)
         client++;
     }
 }
+
+string IRC::getbuff(int socketfd)
+{
+    if (socketBuff.find(socketfd) != socketBuff.end())
+        return socketBuff[socketfd];
+    else
+    {
+        cout << "Buffer bulunamadı! socketfd " << socketfd << endl;
+        return "";
+    }
+};
+
+void IRC::clearbuff(int socketfd)
+{
+    if (socketBuff.find(socketfd) != socketBuff.end())
+        socketBuff[socketfd] = "";  // String'i boş string yapıyoruz
+    else
+        cout << "Buffer temizlenemedi, socketfd bulunamadı!" << endl;
+};

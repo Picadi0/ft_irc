@@ -24,9 +24,6 @@ private:
 public:
   Channel(string name, string pass);
   ~Channel();
-  void addInvisibleClient(Client &client);
-  Client *findInvisibleClient(string nickName);
-  void removeInvisibleClient(Client &client);
   void addClient(Client &client);
   void addBanList(string nickName);
   void removeBanList(string hostInfo);
@@ -55,7 +52,7 @@ public:
   string getClientsNames();
   bool isOp(int socketFd);
   //---------------------
-  void setMaxClientCount(int clientCount)    { this->maxClient = clientCount; }
+  void setMaxClientCount(int clientCount)   { this->maxClient = clientCount; }
   void setName(string name)                 { this->name = name; }
   void setPass(string pass)                 { this->pass = pass; }
   void setTopic(string topic)               { this->topic = topic; }

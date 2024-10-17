@@ -114,20 +114,7 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
                             channel->setOnlyInviteMode(mode == "+i");
                         }
                         else
-                        {
-                            if (channel->findClient(param))
-                            {
-                                if (mode == "+i")
-                                    channel->addInvisibleClient(sender);
-                                else
-                                    channel->removeInvisibleClient(sender);
-                            }
-                            else
-                               sendMsg(sender.getSockfd(), "401 " + channel->getName() + " : not found user " + param);
-                        }
-                    }
-                    else if (mode == "+e")//Ban istisnası (banned kullanıcıları engel dışı tutar).
-                    {
+                            sendMsg(sender.getSockfd(), "401 " + mode + " : malformed MODE -> " + param);
                     }
                     else if (mode == "+l")//Kanaldaki maksimum kullanıcı sayısını sınırlar.
                     {
@@ -178,8 +165,21 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
         }
         else
         {
-            sendMsg(sender.getSockfd(), "476 " + targetChannel + " :Invalid channel name");
-            return;
+            if (mode == "+i" || mode == "-i")
+            {
+                if (sender.getNickname() == targetChannel && param.empty())
+                {
+                    sender.setInvisible(mode == "+i");
+                }
+                else
+                   sendMsg(sender.getSockfd(), "401 Error : malformed invisible format MODE <nick> <+i/-i>");
+            }
+            else
+            {
+                sendMsg(sender.getSockfd(), "476 " + targetChannel + " :Invalid channel name");
+                return;
+
+            }
         }
     }
     else

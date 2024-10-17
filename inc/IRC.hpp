@@ -2,6 +2,9 @@
 
 #include "channel.hpp"
 #include "client.hpp"
+#include <cstddef>
+#include <string>
+#include <utility>
 
 #define BACKLOG 10       // how many pending connections queue will hold
 #define MAXCLIENTS 10    // maximum number of clients
@@ -22,6 +25,7 @@ private:
   sockaddr_in clientAddr;
   map<int, Client> clients;
   list<Channel> channels;
+  map<int, string> socketBuff;
 
   IRC();
 
@@ -31,6 +35,9 @@ public:
   void newClientAdd();
   void handleClient(int sockfd);
   void CommandHandler(Client &client, string cmd);
+  void addbuff(int socketfd, const string& str) { socketBuff[socketfd] += str;};
+  string getbuff(int socketfd);
+  void clearbuff(int socketfd);
   void JoinChannel(Client &client, string channelName, string channelPwd);
   void KickUser(Client &client, const std::string &channelName, const std::string &targetUser);
   void InviteUser(Client &client, const std::string &channelName, const std::string &targetNick);

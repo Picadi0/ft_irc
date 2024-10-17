@@ -20,7 +20,8 @@ void IRC::who(string channelOrName, bool isChannel, Client &sender)
             list<Client>::iterator client = channel->getClients().begin();
             while(client != channel->getClients().end())
             {
-                sendMsg(sender.getSockfd(), ":server 352 " + sender.getNickname() + " " + channel->getName() + " " + client->getUsername() + " " + client->getHostInfo() + " " + "42Istanbul" + " " + client->getNickname() + " H :0 " + client->getRealname());
+                if (!findClient(client->getNickname())->isInvisible())
+                    sendMsg(sender.getSockfd(), ":server 352 " + sender.getNickname() + " " + channel->getName() + " " + client->getUsername() + " " + client->getHostInfo() + " " + "42Istanbul" + " " + client->getNickname() + " H :0 " + client->getRealname());
                 client++;
             }
             sendMsg(sender.getSockfd(), ":server 315 " + sender.getNickname() + " " + channel->getName() + " :End of /WHO list");
@@ -36,7 +37,7 @@ void IRC::who(string channelOrName, bool isChannel, Client &sender)
             client = channel->getClients().begin();
             if (client != channel->getClients().end())
             {
-                if (client->getNickname() == channelOrName && !channel->findInvisibleClient(client->getNickname()))
+                if (client->getNickname() == channelOrName && !findClient(client->getNickname())->isInvisible())
                 {
                     sendMsg(sender.getSockfd(), ":server 352 " + sender.getNickname() + " " + channel->getName() + " " + client->getUsername() + " " + client->getHostInfo() + " " + "42Istanbul" + " " + client->getNickname() + " H :0 " + client->getRealname());
                     found = true;

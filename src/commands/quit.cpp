@@ -10,8 +10,6 @@ void IRC::cleanBufferOnLeave(Client &client)
             channel->removeClient(client);
         if (channel->findInvitedClient(client.getNickname()))
             channel->removeInvitedClient(client);
-        if (channel->findInvisibleClient(client.getNickname()))
-            channel->removeInvisibleClient(client);
         channel++;
     }
 }

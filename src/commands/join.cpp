@@ -31,7 +31,7 @@ void IRC::JoinChannel(Client &sender, string channelName, string channelPwd)
                 channel->addClient(sender);
                 sendMsg(sender.getSockfd(), sender.getIDENTITY() + " JOIN " + channel->getName());
                 sendMsg(sender.getSockfd(), RPL_TOPIC(sender.getNickname(), channelName, channel->getTopic()));
-                if (!channel->findInvisibleClient(sender.getNickname()))
+                if (!sender.isInvisible())
                     sendMyJoinOthers(*channel, sender);
                 getUsersInChannel(*channel, sender);
                 if (channel->findInvitedClient(sender.getNickname()))

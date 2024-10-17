@@ -14,8 +14,8 @@ private:
   string password;
   bool isAuthed;
   bool isInvited;
+  bool invisible;
   bool isOp;
-
 
 public:
   Client();
@@ -29,6 +29,7 @@ public:
 	return (":" + this->nickname + "!" + this->username + "@" + this->hostInfo + " ");
   }
   // get-set
+  void setInvisible(bool flag) { this->invisible = flag; }
   void setUsername(string username) { this->username = username; }
   void setNickname(string nickname) { this->nickname = nickname; }
   void setRealname(string realname) { this->realname = realname; }
@@ -38,6 +39,7 @@ public:
   void setSockfd(int sock) { this->sockfd = sock; }
   void setClientAddr(sockaddr_in clientAddr) { this->clientAddr = clientAddr; }
   //-----------------------//
+  bool isInvisible() { return this->invisible; }
   int getSockfd() { return this->sockfd; }
   sockaddr_in getClientAddr() { return this->clientAddr; }
   string getUsername() { return this->username; }
