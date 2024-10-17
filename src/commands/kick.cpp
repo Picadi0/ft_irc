@@ -55,8 +55,18 @@ void IRC::KickUser(Client &client, const std::string &channelName, const std::st
         sendMsg(client.getSockfd(), "441 " + targetNick + " " + channelName + " :They aren't on that channel");
         return;
     }
-    // Kullanıcıyı kanaldan çıkar
+    
+    Client &targetClient = this->clients[targetSockfd];
+
+    // Kullanıcıya daha önce davet atılmışsa, davet durumunu sıfırla
+    if (targetClient.getInvited())
+    {
+        targetClient.setInvited(false); // Davet durumu sıfırlanıyor
+    }
+
+      // Kullanıcıyı kanaldan çıkar
     it->removeClient(client);
+
     // Kanaldaki tüm kullanıcılara KICK mesajı gönder
     std::string kickMessage = ":" + client.getNickname() + " KICK " + channelName + " " + targetNick;
     sendAllClientMsg(clients, kickMessage);
