@@ -12,6 +12,7 @@ private:
   list<Client> clients;
   list<int> modfd;
   bool TopicChangeByOp;
+  bool OnlyMembersCanMsg;
   Channel();
 
 public:
@@ -33,6 +34,7 @@ public:
   list<int> getModFd()           { return this->modfd; }
   bool getTopicChangeByOp()      { return this->TopicChangeByOp; };
   void removeModFd(int socketFd) { this->modfd.remove(socketFd); }
+  bool getOnlyMembersCanMsg()    { return this->OnlyMembersCanMsg; };
   string getClientsNames();
   bool isOp(int socketFd);
 
@@ -41,6 +43,7 @@ public:
   void setPass(string pass)         { this->pass = pass; }
   void setTopic(string topic)       { this->topic = topic; }
   void onlyOpSetsTopic(bool flag)   { this->TopicChangeByOp = flag; };
+  void setOnlyMembersCanMsg(bool flag)   { this->OnlyMembersCanMsg = flag; };
 
 };
 
