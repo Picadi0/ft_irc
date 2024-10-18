@@ -6,7 +6,7 @@ void IRC::part(Client &sender, string channelName)
     list<Channel>::iterator channel = this->channels.begin();
     while (channel != this->channels.end())
     {
-        if (channel->getName() == channelName)
+        if (channel->getName() == channelName && channel->findClient(sender.getNickname()))
         {
             channel->removeClient(sender);
             sendMyOperationOthers(*channel, sender,sender.getIDENTITY() + " PART " + channelName);
