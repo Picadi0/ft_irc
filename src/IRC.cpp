@@ -1,4 +1,4 @@
-{#include "../inc/IRC.hpp"
+#include "../inc/IRC.hpp"
 #include "../inc/client.hpp"
 #include <string>
 
