@@ -145,9 +145,6 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
                             }
                         }
                     }
-                    else {
-                        sendMsg(sender.getSockfd(), "401 Error : Unknown " + mode);
-                    }
                 }
             }
             else if (channel == NULL)
