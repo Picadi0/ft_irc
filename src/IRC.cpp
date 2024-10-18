@@ -146,10 +146,6 @@ void IRC::transferOnOpLeave(int sockfd)
                 }
             }
         }
-        else
-        {
-            //burası dayıııı
-        }
         channel++;
     }
 }
