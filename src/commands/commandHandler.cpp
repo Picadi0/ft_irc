@@ -112,10 +112,11 @@ void IRC::CommandHandler(Client &sender, string cmd)
                 }
                 else if (token == "TOPIC")
                 {
-                    string channel, title;
+                    std::string channel, title;
                     iss >> channel;
-                    if (!iss.str().substr(iss.tellg()).empty())
-                        title = iss.str().substr(iss.tellg());
+                    // Eğer hala veriler kaldıysa, başlığı (title) al
+                    if (iss.peek() != EOF)  // peek() ile veri olup olmadığını kontrol ediyoruz
+                        std::getline(iss >> std::ws, title);  // Tüm kalan satırı başlık olarak alıyoruz
                     topic(sender, channel, title);
                     break;
                 }
