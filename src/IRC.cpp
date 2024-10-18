@@ -1,7 +1,6 @@
-#include "../inc/IRC.hpp"
+{#include "../inc/IRC.hpp"
 #include "../inc/client.hpp"
 #include <string>
-
 
 IRC::IRC(int port, string password)
 {
@@ -146,6 +145,10 @@ void IRC::transferOnOpLeave(int sockfd)
                     sendMsg(trueClient->getSockfd(), "MODE " + channel->getName() + " +o " + trueClient->getNickname());
                 }
             }
+        }
+        else
+        {
+            //burası dayıııı
         }
         channel++;
     }
