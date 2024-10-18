@@ -45,10 +45,7 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
                     }
                     else if (mode == "+t" || mode == "-t")//Sadece operatörlerin kanal konusunu değiştirebilmesini sağlar.
                     {
-                        if (mode == "+t")
-                            channel->onlyOpSetsTopic(true);
-                        else
-                            channel->onlyOpSetsTopic(false);
+                        channel->onlyOpSetsTopic(mode == "+t");
                         sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " " + mode);
                     }
                     else if (mode == "+n" || mode == "-n")//Kanalda olmayan kullanıcıların mesaj gönderememesini sağlar.
@@ -98,7 +95,7 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
                             {
                                 channel->removeBanList(param);
                                 sendMsg(sender.getSockfd(), "MODE " + channel->getName() + " -b :" + param);
-                                sendMyOperationOthers(*channel, sender, "MODE " + channel->getName() + " +b :" + param);
+                                sendMyOperationOthers(*channel, sender, "MODE " + channel->getName() + " -b :" + param);
                             }
 
                         }
