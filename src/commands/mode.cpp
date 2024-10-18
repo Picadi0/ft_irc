@@ -1,6 +1,4 @@
 #include "../../inc/IRC.hpp"
-#include <exception>
-#include <unistd.h>
 
 void IRC::modecmd(string targetChannel, string mode, string param, Client &sender)
 {
@@ -126,11 +124,10 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
                         }
                         else
                         {
-                            size_t setTo;
+                            int setTo;
                             try
                             {
-                                setTo = std::stoul(param);
-                                if (setTo < 0)
+                                if ((setTo = atoi(param.c_str())) == -1)
                                 {
                                     sendMsg(sender.getSockfd(), "401 " + param + " : malformed size for Channel -> " + param);
                                     return;

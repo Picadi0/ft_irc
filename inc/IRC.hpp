@@ -66,3 +66,5 @@ public:
   IRC(const IRC &irc);
   ~IRC() { close(sockfd); }
 };
+
+string intToString(int number);
