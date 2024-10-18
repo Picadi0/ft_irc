@@ -1,5 +1,6 @@
 #include "../../inc/IRC.hpp"
 #include <_types/_nl_item.h>
+#include <cstddef>
 #include <string>
 #include <sys/socket.h>
 
@@ -32,18 +33,20 @@ void IRC::CommandHandler(Client &sender, string cmd)
                 if (token == "NICK")
                 {
                     iss >> result;
-                    if (!result.empty() && searchClientByNick(result) == -1)
+                    if (!result.empty() && searchClientByNick(result) == -1 &&
+                        result.find('@') == string::npos && result.find('!')  == string::npos && result.find(':') == string::npos)
                         sender.setNickname(result);
                     else
-                        sendMsg(sender.getSockfd(), ": NICK is empty / already taken");
+                        sendMsg(sender.getSockfd(), ": malformed nick");
                 }
                 else if (token == "USER")
                 {
                     iss >> result;
-                    if (!result.empty() && searchClientByUser(result) == -1)
+                    if (!result.empty() && searchClientByUser(result) == -1 &&
+                        result.find('@') == string::npos && result.find('!')  == string::npos && result.find(':') == string::npos)
                         sender.setUsername(result);
                     else
-                        sendMsg(sender.getSockfd(), ": USER is empty / already taken");
+                        sendMsg(sender.getSockfd(), ": malformed user");
                 }
                 else
                 {
@@ -60,9 +63,11 @@ void IRC::CommandHandler(Client &sender, string cmd)
             {
                 if (token == "PRIVMSG")
                 {
-                    string target;
+                    string target, msg;
                     iss >> target;
-                    privmsg(sender,target, iss.str().substr(iss.tellg()));
+                    if (iss.peek() != EOF)
+                        std::getline(iss >> std::ws, msg);
+                    privmsg(sender,target, msg);
                     break;
                 }
                 else if (token == "JOIN" || token == "join")
@@ -89,10 +94,7 @@ void IRC::CommandHandler(Client &sender, string cmd)
                 }
                 else if (token == "QUIT")
                 {
-                    int tmpfd = sender.getSockfd();
                     quit(sender);
-                    checkChannelEmpty();
-                    transferOnOpLeave(tmpfd);
                     break;
                 }
                 else if (token == "PING")
@@ -157,9 +159,11 @@ void IRC::CommandHandler(Client &sender, string cmd)
                 }
                 else if (token == "NOTICE")
                 {
-                    string target;
+                    string target, msg;
                     iss >> target;
-                    notice(sender, target, iss.str().substr(iss.tellg()));
+                    if (iss.peek() != EOF)
+                        std::getline(iss >> std::ws, msg);
+                    notice(sender, target, msg);
                     break;
                 }
                 else

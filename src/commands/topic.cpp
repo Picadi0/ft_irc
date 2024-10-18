@@ -3,7 +3,7 @@
 
 void IRC::topic(Client &sender, string channel, string topic)
 {
-    if (channel.empty() ||  topic.empty())
+    if (channel.empty() &&  topic.empty())
     {
         sendMsg(sender.getSockfd(), "461 TOPIC :Not enough parameters");
         return;

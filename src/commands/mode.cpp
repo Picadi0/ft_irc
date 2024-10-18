@@ -146,10 +146,8 @@ void IRC::modecmd(string targetChannel, string mode, string param, Client &sende
                         }
                     }
                     else {
-                        // invalid channel operator
+                        sendMsg(sender.getSockfd(), "401 Error : Unknown " + mode);
                     }
-                    //else if (mode == "+m")//Kanalı moderated yapar (sadece ses hakkı olanlar mesaj gönderebilir).
-                    //else if (mode == "+v")//Bir kullanıcıya ses hakkı verir (moderated modda konuşabilir).
                 }
             }
             else if (channel == NULL)

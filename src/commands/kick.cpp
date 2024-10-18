@@ -54,13 +54,19 @@ void IRC::KickUser(Client &sender, const std::string &channelName, const std::st
     Client *client = channel->findClient(targetNick);
     if (targetSockfd == -1)
     {
-        sendMsg(sender.getSockfd(), "441 " + targetNick + " " + channelName + " :They aren't on that channel");
+        sendMsg(sender.getSockfd(), "441 " + targetNick + " " + channelName + " :target is not in channel");
         return;
     }
     // Kanaldaki tüm kullanıcılara KICK mesajı gönder
     std::string kickMessage = ":" + sender.getNickname() + " KICK " + channelName + " " + targetNick;
-    sendMsg(sender.getSockfd(), kickMessage);
-    sendMyOperationOthers(*channel, sender, kickMessage);
-    // Kullanıcıyı kanaldan çıkar
-    channel->removeClient(*client);
+    if (sender.getSockfd() != client->getSockfd())
+    {
+        sendMsg(sender.getSockfd(), kickMessage);
+        sendMyOperationOthers(*channel, sender, kickMessage);
+        channel->removeClient(*client);
+    }
+    else
+    {
+        sendMsg(sender.getSockfd(), "401 Error : you can't kick your self");
+    }
 }

@@ -6,7 +6,8 @@ void IRC::privmsg(Client &sender,string target, string msg)
     Client *targetClient;
     if (target[0] != '#') {
         if ((targetClient = findClient(target)))
-            sendMsg(targetClient->getSockfd(), sender.getIDENTITY()+"PRIVMSG "+target+" :"+msg); }
+            sendMsg(targetClient->getSockfd(), sender.getIDENTITY()+"PRIVMSG "+target+" :"+msg);
+    }
     else
     {
         Channel *channel = findChannel(target);
