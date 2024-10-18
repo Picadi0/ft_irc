@@ -1,8 +1,4 @@
 #include "../../inc/IRC.hpp"
-#include <_types/_nl_item.h>
-#include <cstddef>
-#include <string>
-#include <sys/socket.h>
 
 void IRC::CommandHandler(Client &sender, string cmd)
 {

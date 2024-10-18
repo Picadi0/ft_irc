@@ -12,7 +12,7 @@ void IRC::JoinChannel(Client &sender, string channelName, string channelPwd)
     }
     if (join && channel->getMaxClientCount() > 0 && (channel->getClients().size() >= channel->getMaxClientCount()))
     {
-        sendMsg(sender.getSockfd(), "475 : Channel is full "  + channelName + " " + std::to_string(channel->getMaxClientCount()) + "/" + std::to_string(channel->getClients().size()));
+        sendMsg(sender.getSockfd(), "475 : Channel is full "  + channelName + " " + intToString(channel->getMaxClientCount()) + "/" + intToString(channel->getClients().size()));
         return;
     }
     if (join && channel->isBanned(sender.getHostInfo()))

@@ -20,6 +20,10 @@
 #if defined(__linux__)
 #include <cstdlib>
 #include <cstring>
+#include <cstdio>
+#endif
+#if defined(__APPLE__) || defined(__FreeBSD__)
+#include <_types/_nl_item.h>
 #endif
 
 using std::cout;

@@ -1,9 +1,5 @@
 #include "../inc/channel.hpp"
 #include "../inc/IRC.hpp"
-#include <algorithm>
-#include <cstdint>
-#include <iostream>
-#include <string>
 Channel::Channel() {
   cout << FG_YELLOW << "   Channel Info\n"
        << "――――――――――――――――――――――׀\n"

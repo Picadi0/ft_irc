@@ -1,13 +1,7 @@
 #include "../inc/IRC.hpp"
 #include "../inc/client.hpp"
-#include <arpa/inet.h>
-#include <cstddef>
-#include <cstdint>
-#include <cstdio>
-#include <ostream>
-#include <sstream>
 #include <string>
-#include <sys/select.h>
+
 
 IRC::IRC(int port, string password)
 {
@@ -297,3 +291,10 @@ void IRC::clearbuff(int socketfd)
     else
         cout << "Buffer temizlenemedi, socketfd bulunamadı!" << endl;
 };
+
+string intToString(int number)
+{
+    std::stringstream ss;
+    ss << number;
+    return ss.str();
+}
